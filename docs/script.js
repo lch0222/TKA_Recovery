@@ -2,7 +2,7 @@ let currentCount = Number(localStorage.getItem("currentCount")) || 0;
 let totalCount = Number(localStorage.getItem("totalCount")) || 0;
 let completedRounds = Number(localStorage.getItem("completedRounds")) || 0;
 let points = Number(localStorage.getItem("points")) || 0;
-const IMG_PATH = "../img/";
+const IMG_PATH = "./img/";
 
 function showPage(pageId) {
   document.querySelectorAll("section").forEach(section => {
