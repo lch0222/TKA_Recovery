@@ -1,0 +1,119 @@
+body {
+  margin: 0;
+  font-family: "Noto Sans TC", Arial, sans-serif;
+  background: #f4f7fb;
+  color: #263238;
+}
+
+header {
+  background: #2f80ed;
+  color: white;
+  padding: 18px;
+  text-align: center;
+  font-size: 22px;
+  font-weight: bold;
+}
+
+.container {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.card {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 18px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.subtitle {
+  color: #607d8b;
+  font-size: 15px;
+  margin-top: 4px;
+}
+
+.progress-bar {
+  background: #e0e0e0;
+  border-radius: 20px;
+  overflow: hidden;
+  height: 22px;
+  margin: 12px 0;
+}
+
+.progress {
+  height: 100%;
+  width: 0%;
+  background: #27ae60;
+  text-align: center;
+  color: white;
+  font-size: 13px;
+  line-height: 22px;
+  transition: width 0.3s;
+}
+
+button {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  background: #2f80ed;
+  color: white;
+  font-size: 17px;
+  margin-top: 10px;
+  cursor: pointer;
+}
+
+button.secondary {
+  background: #90a4ae;
+}
+
+button.success {
+  background: #27ae60;
+}
+
+button.reset {
+  background: #e74c3c;
+}
+
+.count {
+  font-size: 52px;
+  text-align: center;
+  font-weight: bold;
+  margin: 20px 0;
+  color: #2f80ed;
+}
+
+.badge {
+  display: inline-block;
+  background: #fff3cd;
+  color: #856404;
+  padding: 8px 12px;
+  border-radius: 20px;
+  margin: 4px;
+  font-size: 14px;
+}
+
+.hidden {
+  display: none;
+}
+
+.menu button {
+  margin-bottom: 10px;
+}
+
+ul {
+  padding-left: 20px;
+  line-height: 1.8;
+}
+
+#badgeImage{
+    text-align:center;
+    margin-top:15px;
+}
+
+#badgeImage img{
+    width:300px;
+    max-width:100%;
+}
