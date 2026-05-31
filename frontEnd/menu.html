@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TKA 術後數位復健系統</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: "Noto Sans TC", Arial, sans-serif;
+      background: #f4f7fb;
+      color: #263238;
+    }
+
+    header {
+      background: #2f80ed;
+      color: white;
+      padding: 18px;
+      text-align: center;
+      font-size: 22px;
+      font-weight: bold;
+    }
+
+    .container {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 18px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    .subtitle {
+      color: #607d8b;
+      font-size: 15px;
+      margin-top: 4px;
+    }
+
+    .progress-bar {
+      background: #e0e0e0;
+      border-radius: 20px;
+      overflow: hidden;
+      height: 22px;
+      margin: 12px 0;
+    }
+
+    .progress {
+      height: 100%;
+      width: 0%;
+      background: #27ae60;
+      text-align: center;
+      color: white;
+      font-size: 13px;
+      line-height: 22px;
+      transition: width 0.3s;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      background: #2f80ed;
+      color: white;
+      font-size: 17px;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+
+    button.secondary {
+      background: #90a4ae;
+    }
+
+    button.success {
+      background: #27ae60;
+    }
+
+    .count {
+      font-size: 52px;
+      text-align: center;
+      font-weight: bold;
+      margin: 20px 0;
+      color: #2f80ed;
+    }
+
+    .badge {
+      display: inline-block;
+      background: #fff3cd;
+      color: #856404;
+      padding: 8px 12px;
+      border-radius: 20px;
+      margin: 4px;
+      font-size: 14px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .menu button {
+      margin-bottom: 10px;
+    }
+
+    ul {
+      padding-left: 20px;
+      line-height: 1.8;
+    }
+  </style>
+</head>
+
+<body>
+  <header>TKA 術後數位復健系統</header>
+
+  <div class="container">
+
+    <!-- 首頁 -->
+    <section id="homePage">
+      <div class="card">
+        <h2>您好，歡迎使用</h2>
+        <div class="subtitle">今日目標：完成 4 回合膝關節復健運動</div>
+
+        <h3>今日完成進度</h3>
+        <p id="roundStatus">第 1 回合 ⬜　第 2 回合 ⬜　第 3 回合 ⬜　第 4 回合 ⬜</p>
+
+        <div class="progress-bar">
+          <div id="dailyProgress" class="progress">0%</div>
+        </div>
+
+        <p>目前點數：<strong id="points">0</strong> 點</p>
+      </div>
+
+      <div class="card menu">
+        <button onclick="showPage('exercisePage')">開始復健</button>
+        <button onclick="showPage('achievementPage')">查看成就</button>
+        <button onclick="showPage('educationPage')" class="secondary">衛教資訊</button>
+      </div>
+    </section>
+
+    <!-- 復健頁 -->
+    <section id="exercisePage" class="hidden">
+      <div class="card">
+        <h2 id="roundTitle">第 1 回合復健</h2>
+        <div class="subtitle">目標：完成 10 次膝自彎運動</div>
+
+        <div class="count">
+          <span id="currentCount">0</span> / 10
+        </div>
+
+        <div class="progress-bar">
+          <div id="exerciseProgress" class="progress">0%</div>
+        </div>
+
+        <button onclick="addCount()" class="success">完成 1 次</button>
+        <button onclick="resetAll()" style="background:#e74c3c;">系統歸零</button>
+        <button onclick="showPage('homePage')" class="secondary">返回首頁</button>
+      </div>
+    </section>
+
+    <!-- 成就頁 -->
+    <section id="achievementPage" class="hidden">
+      <div class="card">
+        <h2>我的成就</h2>
+        <p>累積完成次數：<strong id="totalCount">0</strong> 次</p>
+        <p>目前點數：<strong id="achievementPoints">0</strong> 點</p>
+
+        <div id="badges">
+          <span class="badge">尚未獲得成就</span>
+        </div>
+
+        <button onclick="showPage('homePage')" class="secondary">返回首頁</button>
+      </div>
+    </section>
+
+    <!-- 衛教頁 -->
+    <section id="educationPage" class="hidden">
+      <div class="card">
+        <h2>術後衛教資訊</h2>
+        <ul>
+          <li>膝關節術後復健運動</li>
+          <li>助行器使用方式</li>
+          <li>上下樓梯技巧</li>
+          <li>冰敷注意事項</li>
+          <li>飲食與蛋白質攝取建議</li>
+        </ul>
+
+        <button onclick="showPage('homePage')" class="secondary">返回首頁</button>
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    let currentCount = 0;
+    let totalCount = Number(localStorage.getItem("totalCount")) || 0;
+    let completedRounds = Number(localStorage.getItem("completedRounds")) || 0;
+    let points = Number(localStorage.getItem("points")) || 0;
+
+    function showPage(pageId) {
+      document.querySelectorAll("section").forEach(section => {
+        section.classList.add("hidden");
+      });
+      document.getElementById(pageId).classList.remove("hidden");
+
+      if (pageId === "exercisePage") {
+        resetExercise();
+      }
+
+      updateHome();
+      updateAchievement();
+    }
+
+    function resetExercise() {
+      currentCount = 0;
+      document.getElementById("currentCount").innerText = currentCount;
+      document.getElementById("roundTitle").innerText = `第 ${completedRounds + 1} 回合復健`;
+      updateExerciseProgress();
+    }
+
+    function addCount() {
+      if (currentCount < 10) {
+        currentCount++;
+        totalCount++;
+        points++;
+
+        localStorage.setItem("totalCount", totalCount);
+        localStorage.setItem("points", points);
+
+        document.getElementById("currentCount").innerText = currentCount;
+        updateExerciseProgress();
+      }
+
+      if (currentCount === 10) {
+        completedRounds++;
+        localStorage.setItem("completedRounds", completedRounds);
+
+        updateHome();
+        updateAchievement();
+
+        alert("🎉 恭喜完成本回合！獲得 10 點");
+
+        setTimeout(() => {
+          showPage("homePage");
+        }, 300);
+      }
+    }
+
+    function resetAll() {
+      const confirmReset = confirm(
+        "確定要清除所有資料嗎？\n包含點數、完成次數與成就紀錄。"
+      );
+
+      if (!confirmReset) return;
+
+      // 清除 localStorage
+      localStorage.clear();
+
+      // 重設變數
+      currentCount = 0;
+      totalCount = 0;
+      completedRounds = 0;
+      points = 0;
+
+      // 更新畫面
+      updateHome();
+      updateAchievement();
+      resetExercise();
+
+      alert("系統已歸零！");
+      showPage("homePage");
+    }
+
+    function finishRound() {
+      if (completedRounds < 4) {
+
+        completedRounds++;
+        points += 10;
+
+        localStorage.setItem("completedRounds", completedRounds);
+        localStorage.setItem("points", points);
+
+        updateHome();
+        updateAchievement();
+
+        alert("本回合已完成，獲得 10 點！");
+      }
+
+      showPage("homePage");
+    }
+
+    function updateExerciseProgress() {
+      const percent = Math.round((currentCount / 10) * 100);
+      const bar = document.getElementById("exerciseProgress");
+      bar.style.width = percent + "%";
+      bar.innerText = percent + "%";
+    }
+
+    function updateHome() {
+      let status = "";
+      for (let i = 1; i <= 4; i++) {
+        status += `第 ${i} 回合 ${i <= completedRounds ? "✅" : "⬜"}　`;
+      }
+
+      document.getElementById("roundStatus").innerText = status;
+
+      const percent = Math.round((completedRounds / 4) * 100);
+      const bar = document.getElementById("dailyProgress");
+      bar.style.width = percent + "%";
+      bar.innerText = percent + "%";
+
+      document.getElementById("points").innerText = points;
+    }
+
+    function updateAchievement() {
+      document.getElementById("totalCount").innerText = totalCount;
+      document.getElementById("achievementPoints").innerText = points;
+
+      const badges = document.getElementById("badges");
+      badges.innerHTML = "";
+
+      if (completedRounds >= 1) {
+        badges.innerHTML += `<span class="badge">🏅 復健起步</span>`;
+      }
+      if (completedRounds >= 4) {
+        badges.innerHTML += `<span class="badge">🏆 今日達標</span>`;
+      }
+      if (totalCount >= 50) {
+        badges.innerHTML += `<span class="badge">⭐ 累積 50 次</span>`;
+      }
+
+      if (badges.innerHTML === "") {
+        badges.innerHTML = `<span class="badge">尚未獲得成就</span>`;
+      }
+    }
+
+    updateHome();
+    updateAchievement();
+  </script>
+</body>
+</html>
