@@ -14,10 +14,10 @@ const ACTION_NAMES = [
 const ACTION_DURATION_MS = 10000;
 const BREAK_DURATION_MS = 20000;
 const ACTION_VIDEOS = [
-  "https://www.youtube.com/watch?v=dW8bOKk_Jws&t=17s",
-  "https://www.youtube.com/watch?v=dW8bOKk_Jws&t=186s",
-  "https://www.youtube.com/watch?v=dW8bOKk_Jws&t=325s",
-  "https://www.youtube.com/watch?v=dW8bOKk_Jws&t=478s"
+  { url: "https://www.youtube.com/watch?v=dW8bOKk_Jws", start: 17, end: 163 },
+  { url: "https://www.youtube.com/watch?v=dW8bOKk_Jws", start: 165, end: 323 },
+  { url: "https://www.youtube.com/watch?v=dW8bOKk_Jws", start: 325, end: 476 },
+  { url: "https://www.youtube.com/watch?v=dW8bOKk_Jws", start: 478, end: 672 }
 ];
 let actionTimer = null;
 let actionStartedAt = 0;
@@ -121,7 +121,12 @@ function updateActionVideo() {
   }
 }
 
-function getYouTubeEmbedUrl(url) {
+function getYouTubeEmbedUrl(videoConfig) {
+  if (!videoConfig) return "";
+
+  const url = typeof videoConfig === "string" ? videoConfig : videoConfig.url;
+  const configuredStart = typeof videoConfig === "string" ? 0 : Number(videoConfig.start) || 0;
+  const configuredEnd = typeof videoConfig === "string" ? 0 : Number(videoConfig.end) || 0;
   if (!url) return "";
 
   const trimmedUrl = url.trim();
@@ -133,7 +138,8 @@ function getYouTubeEmbedUrl(url) {
   const videoId = embedMatch?.[1] || watchMatch?.[1] || shortMatch?.[1];
   if (!videoId) return "";
 
-  const startSeconds = getYouTubeStartSeconds(trimmedUrl);
+  const startSeconds = configuredStart || getYouTubeTimeParam(trimmedUrl, "start");
+  const endSeconds = configuredEnd || getYouTubeTimeParam(trimmedUrl, "end");
   const params = new URLSearchParams({
     rel: "0",
     playsinline: "1"
@@ -141,6 +147,9 @@ function getYouTubeEmbedUrl(url) {
 
   if (startSeconds > 0) {
     params.set("start", startSeconds);
+  }
+  if (endSeconds > startSeconds) {
+    params.set("end", endSeconds);
   }
 
   if (window.location.protocol === "http:" || window.location.protocol === "https:") {
@@ -150,8 +159,9 @@ function getYouTubeEmbedUrl(url) {
   return `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
 }
 
-function getYouTubeStartSeconds(url) {
-  const timeMatch = url.match(/[?&#](?:t|start)=([^?&#]+)/);
+function getYouTubeTimeParam(url, paramName) {
+  const aliases = paramName === "start" ? "t|start" : paramName;
+  const timeMatch = url.match(new RegExp(`[?&#](?:${aliases})=([^?&#]+)`));
   if (!timeMatch) return 0;
 
   const value = timeMatch[1];
