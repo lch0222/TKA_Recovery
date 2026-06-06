@@ -81,6 +81,7 @@ function saveExerciseState() {
 
 function showPage(pageId) {
   if (pageId !== "actionPage") {
+    stopActionVideo();
     resetRecoveryAction();
   }
 
@@ -258,13 +259,11 @@ function initYouTubePlayer() {
 function handleYouTubeStateChange(event) {
   if (event.data === YT.PlayerState.PLAYING) {
     startVideoProgressTracking(event.target);
-    setActionBackButtonDisabled(true);
     return;
   }
 
   if (event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.BUFFERING) {
     stopVideoProgressTracking();
-    setActionBackButtonDisabled(false);
     return;
   }
 
@@ -438,6 +437,47 @@ function setActionBackButtonDisabled(isDisabled) {
   if (!backButton) return;
 
   backButton.disabled = isDisabled;
+}
+
+function handleActionBack() {
+  const currentActionCount = actionCounts[currentAction - 1] || 0;
+  const videoIsPlaying = Boolean(videoProgressTimer);
+  const actionIncomplete = videoIsPlaying || (currentActionCount > 0 && currentActionCount < 10);
+
+  if (actionIncomplete) {
+    const shouldLeave = confirm("如果中途返回，會喪失目前這個動作的進度。確定要返回動作選擇嗎？");
+    if (!shouldLeave) return;
+
+    resetCurrentActionProgress();
+  }
+
+  stopActionVideo();
+  showPage("exercisePage");
+}
+
+function resetCurrentActionProgress() {
+  const lostCount = actionCounts[currentAction - 1] || 0;
+  if (lostCount <= 0) return;
+
+  actionCounts[currentAction - 1] = 0;
+  currentCount = 0;
+  totalCount = Math.max(0, totalCount - lostCount);
+  points = Math.max(0, points - lostCount);
+
+  saveExerciseState();
+  localStorage.setItem("totalCount", totalCount);
+  localStorage.setItem("points", points);
+  updateActionCountDisplay();
+  updateHome();
+  updateAchievement();
+}
+
+function stopActionVideo() {
+  stopVideoProgressTracking();
+  if (youtubePlayer?.pauseVideo) {
+    youtubePlayer.pauseVideo();
+  }
+  setActionBackButtonDisabled(false);
 }
 
 function startRecoveryAction() {
