@@ -15,9 +15,14 @@ header {
 }
 
 .container {
-  max-width: 480px;
+  max-width: 980px;
   margin: 0 auto;
   padding: 20px;
+}
+
+.container > section:not(#actionPage) {
+  max-width: 480px;
+  margin: 0 auto;
 }
 
 .card {
@@ -91,18 +96,110 @@ button.reset {
 }
 
 .count {
-  font-size: 52px;
+  font-size: 46px;
   text-align: center;
   font-weight: bold;
-  margin: 20px 0;
+  margin: 10px 0;
   color: #2f80ed;
 }
 
+.action-selector {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 18px 0 8px;
+}
+
+.action-selector button {
+  margin-top: 0;
+  padding: 12px 8px;
+  font-size: 15px;
+  background: #eceff1;
+  color: #263238;
+}
+
+.action-selector button.selected {
+  background: #2f80ed;
+  color: white;
+}
+
+.action-selector button.complete {
+  background: #27ae60;
+  color: white;
+}
+
+.action-selector button.selected.complete {
+  background: #1e8449;
+}
+
+.video-frame {
+  aspect-ratio: 16 / 9;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #eceff1;
+  margin: 0;
+  position: relative;
+}
+
+.video-frame iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+}
+
+.video-notice {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  color: #607d8b;
+  font-size: 15px;
+  text-align: center;
+  padding: 16px;
+}
+
 .rep-status {
-  margin: 16px 0 8px;
+  margin: 12px 0 8px;
   color: #455a64;
   font-size: 15px;
   text-align: center;
+}
+
+.action-card {
+  padding: 18px;
+}
+
+.action-card h2 {
+  margin: 0;
+}
+
+.action-layout {
+  display: grid;
+  grid-template-columns: minmax(360px, 1.18fr) minmax(250px, 0.82fr);
+  gap: 18px;
+  align-items: center;
+  margin-top: 14px;
+}
+
+.action-controls {
+  min-width: 0;
+}
+
+.action-controls button {
+  margin-top: 8px;
+}
+
+@media (max-width: 760px) {
+  .container {
+    max-width: 480px;
+    padding: 16px;
+  }
+
+  .action-layout {
+    grid-template-columns: 1fr;
+  }
+
 }
 
 .badge {

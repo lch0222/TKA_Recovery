@@ -42,23 +42,55 @@
         <h2 id="roundTitle">第 1 回合復健</h2>
         <div class="subtitle">目標：完成 10 次膝自彎運動</div>
 
-        <div class="count">
-          <span id="currentCount">0</span> / 10
+        <div id="actionSelector" class="action-selector">
+          <button type="button" class="action-select" data-action="1" onclick="selectAction(1)">足踝運動 (0/10)</button>
+          <button type="button" class="action-select" data-action="2" onclick="selectAction(2)">大腿肌肉收縮運動 (0/10)</button>
+          <button type="button" class="action-select" data-action="3" onclick="selectAction(3)">直抬腿運動 (0/10)</button>
+          <button type="button" class="action-select" data-action="4" onclick="selectAction(4)">膝部屈曲伸直運動 (0/10)</button>
         </div>
 
-        <div class="progress-bar">
-          <div id="exerciseProgress" class="progress">0%</div>
-        </div>
+        <button onclick="showPage('homePage')" class="secondary">返回首頁</button>
+      </div>
+    </section>
 
-        <div class="rep-status">
-          <div id="repStatusText">按下開始，完成動作後才會記錄 1 次。</div>
-          <div class="progress-bar">
-            <div id="repProgress" class="progress">Ready</div>
+    <section id="actionPage" class="hidden">
+      <div class="card action-card">
+        <h2 id="actionTitle">足踝運動</h2>
+        <div class="subtitle">完成此動作 10 次</div>
+
+        <div class="action-layout">
+          <div class="video-frame">
+            <iframe
+              id="actionVideo"
+              title="Exercise instruction video"
+              src=""
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              referrerpolicy="strict-origin-when-cross-origin"
+              allowfullscreen>
+            </iframe>
+            <div id="videoNotice" class="video-notice hidden">尚未設定此動作的影片</div>
+          </div>
+
+          <div class="action-controls">
+            <div class="count">
+              <span id="currentCount">0</span> / 10
+            </div>
+
+            <div class="progress-bar">
+              <div id="exerciseProgress" class="progress">0%</div>
+            </div>
+
+            <div class="rep-status">
+              <div id="repStatusText">按下開始，完成動作後才會記錄 1 次。</div>
+              <div class="progress-bar">
+                <div id="repProgress" class="progress">Ready</div>
+              </div>
+            </div>
+
+            <button id="startRepButton" onclick="startRecoveryAction()" class="success">開始復健動作</button>
+            <button id="actionBackButton" onclick="showPage('exercisePage')" class="secondary">返回動作選擇</button>
           </div>
         </div>
-
-        <button id="startRepButton" onclick="startRecoveryAction()" class="success">開始復健動作</button>
-        <button onclick="showPage('homePage')" class="secondary">返回首頁</button>
       </div>
     </section>
 

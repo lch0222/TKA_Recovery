@@ -1,17 +1,61 @@
 let currentCount = Number(localStorage.getItem("currentCount")) || 0;
+let currentAction = Number(localStorage.getItem("currentAction")) || 1;
 let totalCount = Number(localStorage.getItem("totalCount")) || 0;
 let completedRounds = Number(localStorage.getItem("completedRounds")) || 0;
 let points = Number(localStorage.getItem("points")) || 0;
 const IMG_PATH = "./img/";
+const ACTIONS_PER_ROUND = 4;
+const ACTION_NAMES = [
+  "足踝運動",
+  "大腿肌肉收縮運動",
+  "直抬腿運動",
+  "膝部屈曲伸直運動"
+];
 const ACTION_DURATION_MS = 10000;
 const BREAK_DURATION_MS = 20000;
+const ACTION_VIDEOS = [
+  "https://www.youtube.com/watch?v=dW8bOKk_Jws&t=17s",
+  "https://www.youtube.com/watch?v=dW8bOKk_Jws&t=186s",
+  "https://www.youtube.com/watch?v=dW8bOKk_Jws&t=325s",
+  "https://www.youtube.com/watch?v=dW8bOKk_Jws&t=478s"
+];
 let actionTimer = null;
 let actionStartedAt = 0;
 let breakTimer = null;
 let breakStartedAt = 0;
 
+if (currentAction < 1 || currentAction > ACTIONS_PER_ROUND) {
+  currentAction = 1;
+  localStorage.setItem("currentAction", currentAction);
+}
+
+let actionCounts = loadActionCounts();
+currentCount = actionCounts[currentAction - 1] || 0;
+
+function loadActionCounts() {
+  try {
+    const savedCounts = JSON.parse(localStorage.getItem("actionCounts") || "[]");
+    if (Array.isArray(savedCounts) && savedCounts.length === ACTIONS_PER_ROUND) {
+      return savedCounts.map(count => Math.min(10, Math.max(0, Number(count) || 0)));
+    }
+  } catch (error) {
+    // Fall back to the old single-count value below.
+  }
+
+  const counts = Array(ACTIONS_PER_ROUND).fill(0);
+  counts[currentAction - 1] = Math.min(10, Math.max(0, currentCount));
+  return counts;
+}
+
+function saveExerciseState() {
+  currentCount = actionCounts[currentAction - 1] || 0;
+  localStorage.setItem("currentAction", currentAction);
+  localStorage.setItem("currentCount", currentCount);
+  localStorage.setItem("actionCounts", JSON.stringify(actionCounts));
+}
+
 function showPage(pageId) {
-  if (pageId !== "exercisePage") {
+  if (pageId !== "actionPage") {
     resetRecoveryAction();
   }
 
@@ -23,16 +67,132 @@ function showPage(pageId) {
   if (pageId === "exercisePage") {
     resetExercise();
   }
+  if (pageId === "actionPage") {
+    resetActionPage();
+  }
 
   updateHome();
   updateAchievement();
 }
 
 function resetExercise() {
-  document.getElementById("roundTitle").innerText = `第 ${completedRounds + 1} 回合復健`;
-  document.getElementById("currentCount").innerText = currentCount;
-  updateExerciseProgress();
+  updateExerciseDisplay();
+}
+
+function updateExerciseDisplay() {
+  document.getElementById("roundTitle").innerText =
+    `第 ${completedRounds + 1} 回合 - 選擇動作`;
+  updateActionButtons();
+}
+
+function selectAction(actionNumber) {
+  if (actionTimer || breakTimer) return;
+  if (actionNumber < 1 || actionNumber > ACTIONS_PER_ROUND) return;
+
+  currentAction = actionNumber;
+  saveExerciseState();
+  showPage("actionPage");
+}
+
+function resetActionPage() {
+  updateActionPageDisplay();
   resetRecoveryAction();
+}
+
+function updateActionPageDisplay() {
+  currentCount = actionCounts[currentAction - 1] || 0;
+  document.getElementById("actionTitle").innerText =
+    `第 ${completedRounds + 1} 回合 - ${ACTION_NAMES[currentAction - 1]}`;
+  document.getElementById("currentCount").innerText = currentCount;
+  updateActionVideo();
+  updateExerciseProgress();
+}
+
+function updateActionVideo() {
+  const video = document.getElementById("actionVideo");
+  const notice = document.getElementById("videoNotice");
+  if (!video) return;
+
+  const embedUrl = getYouTubeEmbedUrl(ACTION_VIDEOS[currentAction - 1]);
+  video.src = embedUrl;
+  video.classList.toggle("hidden", !embedUrl);
+  if (notice) {
+    notice.classList.toggle("hidden", Boolean(embedUrl));
+  }
+}
+
+function getYouTubeEmbedUrl(url) {
+  if (!url) return "";
+
+  const trimmedUrl = url.trim();
+  if (trimmedUrl.includes("VIDEO_ID_ACTION")) return "";
+
+  const embedMatch = trimmedUrl.match(/youtube\.com\/embed\/([^?&/]+)/);
+  const watchMatch = trimmedUrl.match(/[?&]v=([^?&]+)/);
+  const shortMatch = trimmedUrl.match(/youtu\.be\/([^?&/]+)/);
+  const videoId = embedMatch?.[1] || watchMatch?.[1] || shortMatch?.[1];
+  if (!videoId) return "";
+
+  const startSeconds = getYouTubeStartSeconds(trimmedUrl);
+  const params = new URLSearchParams({
+    rel: "0",
+    playsinline: "1"
+  });
+
+  if (startSeconds > 0) {
+    params.set("start", startSeconds);
+  }
+
+  if (window.location.protocol === "http:" || window.location.protocol === "https:") {
+    params.set("origin", window.location.origin);
+  }
+
+  return `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
+}
+
+function getYouTubeStartSeconds(url) {
+  const timeMatch = url.match(/[?&#](?:t|start)=([^?&#]+)/);
+  if (!timeMatch) return 0;
+
+  const value = timeMatch[1];
+  const hourMatch = value.match(/(\d+)h/);
+  const minuteMatch = value.match(/(\d+)m/);
+  const secondMatch = value.match(/(\d+)s/);
+
+  if (hourMatch || minuteMatch || secondMatch) {
+    return (
+      (Number(hourMatch?.[1]) || 0) * 3600 +
+      (Number(minuteMatch?.[1]) || 0) * 60 +
+      (Number(secondMatch?.[1]) || 0)
+    );
+  }
+
+  return Number(value) || 0;
+}
+
+function updateActionButtons() {
+  document.querySelectorAll(".action-select").forEach(button => {
+    const actionNumber = Number(button.dataset.action);
+    const count = actionCounts[actionNumber - 1] || 0;
+
+    button.innerText = `${ACTION_NAMES[actionNumber - 1]} (${count}/10)`;
+    button.classList.toggle("selected", actionNumber === currentAction);
+    button.classList.toggle("complete", count >= 10);
+    button.disabled = Boolean(actionTimer || breakTimer);
+  });
+}
+
+function setActionButtonsDisabled(isDisabled) {
+  document.querySelectorAll(".action-select").forEach(button => {
+    button.disabled = isDisabled;
+  });
+}
+
+function setActionBackButtonDisabled(isDisabled) {
+  const backButton = document.getElementById("actionBackButton");
+  if (!backButton) return;
+
+  backButton.disabled = isDisabled;
 }
 
 function startRecoveryAction() {
@@ -43,6 +203,8 @@ function startRecoveryAction() {
   actionStartedAt = Date.now();
 
   startButton.disabled = true;
+  setActionButtonsDisabled(true);
+  setActionBackButtonDisabled(true);
   statusText.innerText = "請持續完成這一次動作...";
   setRepProgressMode("action-progress");
   updateRepProgress(0);
@@ -72,6 +234,8 @@ function startBreakTimer() {
 
   startButton.disabled = true;
   startButton.innerText = "休息一下";
+  setActionButtonsDisabled(true);
+  setActionBackButtonDisabled(true);
   setRepProgressMode("break-progress");
   updateRepProgress(100, "休息");
 
@@ -104,15 +268,23 @@ function resetRecoveryAction(delay = 0) {
 
   setTimeout(() => {
     const startButton = document.getElementById("startRepButton");
+    const backButton = document.getElementById("actionBackButton");
     const statusText = document.getElementById("repStatusText");
 
     if (!startButton || !statusText) return;
 
-    startButton.disabled = false;
-    startButton.innerText = "開始復健動作";
-    statusText.innerText = "按下開始，完成動作後才會記錄 1 次。";
+    const selectedActionComplete = (actionCounts[currentAction - 1] || 0) >= 10;
+    startButton.disabled = selectedActionComplete;
+    startButton.innerText = selectedActionComplete ? "此動作已完成" : "開始復健動作";
+    if (backButton) {
+      backButton.disabled = false;
+    }
+    statusText.innerText = selectedActionComplete
+      ? "此動作已完成，請返回選擇其他動作。"
+      : "按下開始，完成動作後才會記錄 1 次。";
     setRepProgressMode("action-progress");
     updateRepProgress(0);
+    updateActionButtons();
   }, delay);
 }
 
@@ -136,32 +308,45 @@ function setRepProgressMode(mode) {
 
 function recordCompletedAction() {
   if (currentCount < 10) {
-    currentCount++;
+    actionCounts[currentAction - 1]++;
+    currentCount = actionCounts[currentAction - 1];
     totalCount++;
     points++;
 
-    localStorage.setItem("currentCount", currentCount);
+    saveExerciseState();
     localStorage.setItem("totalCount", totalCount);
     localStorage.setItem("points", points);
 
-    document.getElementById("currentCount").innerText = currentCount;
-    updateExerciseProgress();
+    updateActionPageDisplay();
   }
 
-  if (currentCount === 10) {
+  if (actionCounts.every(count => count >= 10)) {
     completedRounds++;
     localStorage.setItem("completedRounds", completedRounds);
 
-    localStorage.setItem("currentCount", 0);
+    currentAction = 1;
     currentCount = 0;
+    actionCounts = Array(ACTIONS_PER_ROUND).fill(0);
+    saveExerciseState();
 
     updateHome();
     updateAchievement();
 
-    alert("🎉 恭喜完成本回合！獲得 10 點");
+    alert("🎉 恭喜完成本回合！");
 
     setTimeout(() => {
-      showPage("homePage");
+      showPage("exercisePage");
+    }, 300);
+
+    return true;
+  }
+
+  if (currentCount === 10) {
+    updateAchievement();
+    alert(`${ACTION_NAMES[currentAction - 1]} 已完成。`);
+
+    setTimeout(() => {
+      showPage("exercisePage");
     }, 300);
 
     return true;
@@ -182,6 +367,8 @@ function resetAll() {
 
   // 重設變數
   currentCount = 0;
+  currentAction = 1;
+  actionCounts = Array(ACTIONS_PER_ROUND).fill(0);
   totalCount = 0;
   completedRounds = 0;
   points = 0;
@@ -216,6 +403,8 @@ function finishRound() {
 function updateExerciseProgress() {
   const percent = Math.round((currentCount / 10) * 100);
   const bar = document.getElementById("exerciseProgress");
+  if (!bar) return;
+
   bar.style.width = percent + "%";
   bar.innerText = percent + "%";
 }
