@@ -58,14 +58,6 @@ header {
   transition: width 0.3s;
 }
 
-.progress.action-progress {
-  background: #27ae60;
-}
-
-.progress.break-progress {
-  background: #f39c12;
-}
-
 button {
   width: 100%;
   padding: 14px;

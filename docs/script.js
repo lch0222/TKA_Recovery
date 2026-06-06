@@ -18,7 +18,7 @@ const ACTION_VIDEOS = [
     url: "https://www.youtube.com/watch?v=dW8bOKk_Jws",
     start: 17,
     end: 163,
-    repTimes: [58, 69, 81, 92, 103, 114, 126, 138, 149, 161]
+    repTimes: [59, 70, 82, 93, 104, 115, 127, 139, 150, 162]
   },
   {
     url: "https://www.youtube.com/watch?v=dW8bOKk_Jws",
@@ -435,13 +435,9 @@ function startRecoveryAction() {
   setActionButtonsDisabled(true);
   setActionBackButtonDisabled(true);
   statusText.innerText = "請持續完成這一次動作...";
-  setRepProgressMode("action-progress");
-  updateRepProgress(0);
 
   actionTimer = setInterval(() => {
     const elapsed = Date.now() - actionStartedAt;
-    const percent = Math.min(100, Math.round((elapsed / ACTION_DURATION_MS) * 100));
-    updateRepProgress(percent);
 
     if (elapsed >= ACTION_DURATION_MS) {
       clearInterval(actionTimer);
@@ -465,17 +461,13 @@ function startBreakTimer() {
   startButton.innerText = "休息一下";
   setActionButtonsDisabled(true);
   setActionBackButtonDisabled(true);
-  setRepProgressMode("break-progress");
-  updateRepProgress(100, "休息");
 
   breakTimer = setInterval(() => {
     const elapsed = Date.now() - breakStartedAt;
     const remainingMs = Math.max(0, BREAK_DURATION_MS - elapsed);
     const remainingSeconds = Math.ceil(remainingMs / 1000);
-    const percent = Math.max(0, Math.round((remainingMs / BREAK_DURATION_MS) * 100));
 
     statusText.innerText = `休息倒數：${remainingSeconds} 秒`;
-    updateRepProgress(percent, "休息");
 
     if (remainingMs <= 0) {
       clearInterval(breakTimer);
@@ -511,28 +503,8 @@ function resetRecoveryAction(delay = 0) {
     statusText.innerText = selectedActionComplete
       ? "此動作已完成，請返回選擇其他動作。"
       : "播放影片後會依照影片進度自動記錄次數。";
-    setRepProgressMode("action-progress");
-    updateRepProgress(0);
     updateActionButtons();
   }, delay);
-}
-
-function updateRepProgress(percent, label = "") {
-  const bar = document.getElementById("repProgress");
-  if (!bar) return;
-
-  bar.style.width = percent + "%";
-  bar.innerText = percent === 0 ? "Ready" : `${label ? label + " " : ""}${percent}%`;
-}
-
-function setRepProgressMode(mode) {
-  const bar = document.getElementById("repProgress");
-  if (!bar) return;
-
-  bar.classList.remove("action-progress", "break-progress");
-  if (mode) {
-    bar.classList.add(mode);
-  }
 }
 
 function recordCompletedAction() {
