@@ -47,6 +47,7 @@ let youtubePlayer = null;
 let youtubeApiReady = false;
 let pendingYoutubePlayerInit = false;
 let videoProgressTimer = null;
+let lastAllowedVideoTime = 0;
 
 if (currentAction < 1 || currentAction > ACTIONS_PER_ROUND) {
   currentAction = 1;
@@ -151,6 +152,7 @@ function updateActionVideo() {
   if (!video) return;
 
   const embedUrl = getYouTubeEmbedUrl(ACTION_VIDEOS[currentAction - 1]);
+  lastAllowedVideoTime = getCurrentVideoStartSeconds();
   video.src = embedUrl;
   video.classList.toggle("hidden", !embedUrl);
   if (notice) {
@@ -183,6 +185,10 @@ function getYouTubeEmbedUrl(videoConfig) {
   const endSeconds = configuredEnd || getYouTubeTimeParam(trimmedUrl, "end");
   const params = new URLSearchParams({
     enablejsapi: "1",
+    controls: "0",
+    disablekb: "1",
+    fs: "0",
+    modestbranding: "1",
     rel: "0",
     playsinline: "1"
   });
@@ -296,10 +302,20 @@ function getCurrentVideoEndSeconds() {
 
 function startVideoProgressTracking(player) {
   stopVideoProgressTracking();
-  updateVideoDrivenCount(player.getCurrentTime());
+  lastAllowedVideoTime = player.getCurrentTime();
+  updateVideoDrivenCount(lastAllowedVideoTime);
 
   videoProgressTimer = setInterval(() => {
-    updateVideoDrivenCount(player.getCurrentTime());
+    const currentTime = player.getCurrentTime();
+    const isLikelyFastForward = currentTime > lastAllowedVideoTime + 2.5;
+
+    if (isLikelyFastForward) {
+      player.seekTo(lastAllowedVideoTime, true);
+      return;
+    }
+
+    lastAllowedVideoTime = Math.max(lastAllowedVideoTime, currentTime);
+    updateVideoDrivenCount(currentTime);
   }, 500);
 }
 
