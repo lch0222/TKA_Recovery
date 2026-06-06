@@ -23,6 +23,9 @@ let actionTimer = null;
 let actionStartedAt = 0;
 let breakTimer = null;
 let breakStartedAt = 0;
+let youtubePlayer = null;
+let youtubeApiReady = false;
+let pendingYoutubePlayerInit = false;
 
 if (currentAction < 1 || currentAction > ACTIONS_PER_ROUND) {
   currentAction = 1;
@@ -119,6 +122,10 @@ function updateActionVideo() {
   if (notice) {
     notice.classList.toggle("hidden", Boolean(embedUrl));
   }
+
+  if (embedUrl) {
+    initYouTubePlayer();
+  }
 }
 
 function getYouTubeEmbedUrl(videoConfig) {
@@ -141,6 +148,7 @@ function getYouTubeEmbedUrl(videoConfig) {
   const startSeconds = configuredStart || getYouTubeTimeParam(trimmedUrl, "start");
   const endSeconds = configuredEnd || getYouTubeTimeParam(trimmedUrl, "end");
   const params = new URLSearchParams({
+    enablejsapi: "1",
     rel: "0",
     playsinline: "1"
   });
@@ -179,6 +187,59 @@ function getYouTubeTimeParam(url, paramName) {
 
   return Number(value) || 0;
 }
+
+function loadYouTubeApi() {
+  if (window.YT?.Player || document.getElementById("youtubeIframeApi")) {
+    return;
+  }
+
+  const script = document.createElement("script");
+  script.id = "youtubeIframeApi";
+  script.src = "https://www.youtube.com/iframe_api";
+  document.head.appendChild(script);
+}
+
+function initYouTubePlayer() {
+  pendingYoutubePlayerInit = true;
+  loadYouTubeApi();
+
+  if (!youtubeApiReady || !window.YT?.Player) return;
+
+  pendingYoutubePlayerInit = false;
+  if (youtubePlayer) return;
+
+  youtubePlayer = new YT.Player("actionVideo", {
+    events: {
+      onStateChange: handleYouTubeStateChange
+    }
+  });
+}
+
+function handleYouTubeStateChange(event) {
+  if (event.data !== YT.PlayerState.ENDED) return;
+
+  const startSeconds = getCurrentVideoStartSeconds();
+  event.target.seekTo(startSeconds, true);
+  event.target.pauseVideo();
+}
+
+function getCurrentVideoStartSeconds() {
+  const videoConfig = ACTION_VIDEOS[currentAction - 1];
+  if (!videoConfig) return 0;
+
+  if (typeof videoConfig === "string") {
+    return getYouTubeTimeParam(videoConfig, "start");
+  }
+
+  return Number(videoConfig.start) || getYouTubeTimeParam(videoConfig.url || "", "start");
+}
+
+window.onYouTubeIframeAPIReady = function () {
+  youtubeApiReady = true;
+  if (pendingYoutubePlayerInit) {
+    initYouTubePlayer();
+  }
+};
 
 function updateActionButtons() {
   document.querySelectorAll(".action-select").forEach(button => {
