@@ -50,7 +50,14 @@
           <div id="exerciseProgress" class="progress">0%</div>
         </div>
 
-        <button onclick="addCount()" class="success">完成 1 次</button>
+        <div class="rep-status">
+          <div id="repStatusText">按下開始，完成動作後才會記錄 1 次。</div>
+          <div class="progress-bar">
+            <div id="repProgress" class="progress">Ready</div>
+          </div>
+        </div>
+
+        <button id="startRepButton" onclick="startRecoveryAction()" class="success">開始復健動作</button>
         <button onclick="showPage('homePage')" class="secondary">返回首頁</button>
       </div>
     </section>

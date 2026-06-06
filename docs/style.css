@@ -53,6 +53,14 @@ header {
   transition: width 0.3s;
 }
 
+.progress.action-progress {
+  background: #27ae60;
+}
+
+.progress.break-progress {
+  background: #f39c12;
+}
+
 button {
   width: 100%;
   padding: 14px;
@@ -63,6 +71,11 @@ button {
   font-size: 17px;
   margin-top: 10px;
   cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
 }
 
 button.secondary {
@@ -83,6 +96,13 @@ button.reset {
   font-weight: bold;
   margin: 20px 0;
   color: #2f80ed;
+}
+
+.rep-status {
+  margin: 16px 0 8px;
+  color: #455a64;
+  font-size: 15px;
+  text-align: center;
 }
 
 .badge {

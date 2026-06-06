@@ -3,8 +3,18 @@ let totalCount = Number(localStorage.getItem("totalCount")) || 0;
 let completedRounds = Number(localStorage.getItem("completedRounds")) || 0;
 let points = Number(localStorage.getItem("points")) || 0;
 const IMG_PATH = "./img/";
+const ACTION_DURATION_MS = 10000;
+const BREAK_DURATION_MS = 20000;
+let actionTimer = null;
+let actionStartedAt = 0;
+let breakTimer = null;
+let breakStartedAt = 0;
 
 function showPage(pageId) {
+  if (pageId !== "exercisePage") {
+    resetRecoveryAction();
+  }
+
   document.querySelectorAll("section").forEach(section => {
     section.classList.add("hidden");
   });
@@ -22,9 +32,109 @@ function resetExercise() {
   document.getElementById("roundTitle").innerText = `第 ${completedRounds + 1} 回合復健`;
   document.getElementById("currentCount").innerText = currentCount;
   updateExerciseProgress();
+  resetRecoveryAction();
 }
 
-function addCount() {
+function startRecoveryAction() {
+  if (actionTimer || breakTimer || currentCount >= 10) return;
+
+  const startButton = document.getElementById("startRepButton");
+  const statusText = document.getElementById("repStatusText");
+  actionStartedAt = Date.now();
+
+  startButton.disabled = true;
+  statusText.innerText = "請持續完成這一次動作...";
+  setRepProgressMode("action-progress");
+  updateRepProgress(0);
+
+  actionTimer = setInterval(() => {
+    const elapsed = Date.now() - actionStartedAt;
+    const percent = Math.min(100, Math.round((elapsed / ACTION_DURATION_MS) * 100));
+    updateRepProgress(percent);
+
+    if (elapsed >= ACTION_DURATION_MS) {
+      clearInterval(actionTimer);
+      actionTimer = null;
+      statusText.innerText = "完成！已記錄 1 次。";
+
+      const roundFinished = recordCompletedAction();
+      if (!roundFinished) {
+        startBreakTimer();
+      }
+    }
+  }, 100);
+}
+
+function startBreakTimer() {
+  const startButton = document.getElementById("startRepButton");
+  const statusText = document.getElementById("repStatusText");
+  breakStartedAt = Date.now();
+
+  startButton.disabled = true;
+  startButton.innerText = "休息一下";
+  setRepProgressMode("break-progress");
+  updateRepProgress(100, "休息");
+
+  breakTimer = setInterval(() => {
+    const elapsed = Date.now() - breakStartedAt;
+    const remainingMs = Math.max(0, BREAK_DURATION_MS - elapsed);
+    const remainingSeconds = Math.ceil(remainingMs / 1000);
+    const percent = Math.max(0, Math.round((remainingMs / BREAK_DURATION_MS) * 100));
+
+    statusText.innerText = `休息倒數：${remainingSeconds} 秒`;
+    updateRepProgress(percent, "休息");
+
+    if (remainingMs <= 0) {
+      clearInterval(breakTimer);
+      breakTimer = null;
+      resetRecoveryAction();
+    }
+  }, 100);
+}
+
+function resetRecoveryAction(delay = 0) {
+  if (actionTimer) {
+    clearInterval(actionTimer);
+    actionTimer = null;
+  }
+  if (breakTimer) {
+    clearInterval(breakTimer);
+    breakTimer = null;
+  }
+
+  setTimeout(() => {
+    const startButton = document.getElementById("startRepButton");
+    const statusText = document.getElementById("repStatusText");
+
+    if (!startButton || !statusText) return;
+
+    startButton.disabled = false;
+    startButton.innerText = "開始復健動作";
+    statusText.innerText = "按下開始，完成動作後才會記錄 1 次。";
+    setRepProgressMode("action-progress");
+    updateRepProgress(0);
+  }, delay);
+}
+
+function updateRepProgress(percent, label = "") {
+  const bar = document.getElementById("repProgress");
+  if (!bar) return;
+
+  bar.style.width = percent + "%";
+  bar.innerText = percent === 0 ? "Ready" : `${label ? label + " " : ""}${percent}%`;
+}
+
+function setRepProgressMode(mode) {
+  const bar = document.getElementById("repProgress");
+  if (!bar) return;
+
+  bar.classList.remove("action-progress", "break-progress");
+  if (mode) {
+    bar.classList.add(mode);
+  }
+}
+
+function recordCompletedAction() {
   if (currentCount < 10) {
     currentCount++;
     totalCount++;
@@ -53,7 +163,11 @@ function addCount() {
     setTimeout(() => {
       showPage("homePage");
     }, 300);
+
+    return true;
   }
+
+  return false;
 }
 
 function resetAll() {
