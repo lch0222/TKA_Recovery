@@ -14,10 +14,30 @@ const ACTION_NAMES = [
 const ACTION_DURATION_MS = 10000;
 const BREAK_DURATION_MS = 20000;
 const ACTION_VIDEOS = [
-  { url: "https://www.youtube.com/watch?v=dW8bOKk_Jws", start: 17, end: 163 },
-  { url: "https://www.youtube.com/watch?v=dW8bOKk_Jws", start: 165, end: 323 },
-  { url: "https://www.youtube.com/watch?v=dW8bOKk_Jws", start: 325, end: 476 },
-  { url: "https://www.youtube.com/watch?v=dW8bOKk_Jws", start: 478, end: 672 }
+  {
+    url: "https://www.youtube.com/watch?v=dW8bOKk_Jws",
+    start: 17,
+    end: 163,
+    repTimes: [58, 69, 81, 92, 103, 114, 126, 138, 149, 161]
+  },
+  {
+    url: "https://www.youtube.com/watch?v=dW8bOKk_Jws",
+    start: 165,
+    end: 323,
+    repTimes: [181, 197, 212, 228, 244, 260, 276, 291, 307, 323]
+  },
+  {
+    url: "https://www.youtube.com/watch?v=dW8bOKk_Jws",
+    start: 325,
+    end: 476,
+    repTimes: [340, 355, 370, 385, 401, 416, 431, 446, 461, 476]
+  },
+  {
+    url: "https://www.youtube.com/watch?v=dW8bOKk_Jws",
+    start: 478,
+    end: 672,
+    repTimes: [497, 517, 536, 556, 575, 594, 614, 633, 653, 672]
+  }
 ];
 let actionTimer = null;
 let actionStartedAt = 0;
@@ -26,6 +46,7 @@ let breakStartedAt = 0;
 let youtubePlayer = null;
 let youtubeApiReady = false;
 let pendingYoutubePlayerInit = false;
+let videoProgressTimer = null;
 
 if (currentAction < 1 || currentAction > ACTIONS_PER_ROUND) {
   currentAction = 1;
@@ -100,14 +121,27 @@ function selectAction(actionNumber) {
 function resetActionPage() {
   updateActionPageDisplay();
   resetRecoveryAction();
+  updateVideoProgressText();
+}
+
+function updateVideoProgressText() {
+  const statusText = document.getElementById("repStatusText");
+  if (!statusText) return;
+
+  statusText.innerText = "播放影片後會依照影片進度自動記錄次數。";
 }
 
 function updateActionPageDisplay() {
   currentCount = actionCounts[currentAction - 1] || 0;
   document.getElementById("actionTitle").innerText =
     `第 ${completedRounds + 1} 回合 - ${ACTION_NAMES[currentAction - 1]}`;
-  document.getElementById("currentCount").innerText = currentCount;
+  updateActionCountDisplay();
   updateActionVideo();
+}
+
+function updateActionCountDisplay() {
+  currentCount = actionCounts[currentAction - 1] || 0;
+  document.getElementById("currentCount").innerText = currentCount;
   updateExerciseProgress();
 }
 
@@ -216,11 +250,26 @@ function initYouTubePlayer() {
 }
 
 function handleYouTubeStateChange(event) {
-  if (event.data !== YT.PlayerState.ENDED) return;
+  if (event.data === YT.PlayerState.PLAYING) {
+    startVideoProgressTracking(event.target);
+    setActionBackButtonDisabled(true);
+    return;
+  }
 
-  const startSeconds = getCurrentVideoStartSeconds();
-  event.target.seekTo(startSeconds, true);
-  event.target.pauseVideo();
+  if (event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.BUFFERING) {
+    stopVideoProgressTracking();
+    setActionBackButtonDisabled(false);
+    return;
+  }
+
+  if (event.data === YT.PlayerState.ENDED) {
+    stopVideoProgressTracking();
+    updateVideoDrivenCount(getCurrentVideoEndSeconds());
+
+    const startSeconds = getCurrentVideoStartSeconds();
+    event.target.seekTo(startSeconds, true);
+    event.target.pauseVideo();
+  }
 }
 
 function getCurrentVideoStartSeconds() {
@@ -232,6 +281,115 @@ function getCurrentVideoStartSeconds() {
   }
 
   return Number(videoConfig.start) || getYouTubeTimeParam(videoConfig.url || "", "start");
+}
+
+function getCurrentVideoEndSeconds() {
+  const videoConfig = ACTION_VIDEOS[currentAction - 1];
+  if (!videoConfig) return 0;
+
+  if (typeof videoConfig === "string") {
+    return getYouTubeTimeParam(videoConfig, "end");
+  }
+
+  return Number(videoConfig.end) || getYouTubeTimeParam(videoConfig.url || "", "end");
+}
+
+function startVideoProgressTracking(player) {
+  stopVideoProgressTracking();
+  updateVideoDrivenCount(player.getCurrentTime());
+
+  videoProgressTimer = setInterval(() => {
+    updateVideoDrivenCount(player.getCurrentTime());
+  }, 500);
+}
+
+function stopVideoProgressTracking() {
+  if (!videoProgressTimer) return;
+
+  clearInterval(videoProgressTimer);
+  videoProgressTimer = null;
+}
+
+function updateVideoDrivenCount(currentTime) {
+  const startSeconds = getCurrentVideoStartSeconds();
+  const endSeconds = getCurrentVideoEndSeconds();
+  if (endSeconds <= startSeconds || currentTime < startSeconds) return;
+
+  const repTimes = getCurrentVideoRepTimes();
+  const nextCount = repTimes.length > 0
+    ? repTimes.filter(repTime => currentTime >= repTime).length
+    : Math.min(10, Math.floor(((currentTime - startSeconds) / (endSeconds - startSeconds)) * 10));
+  if (nextCount <= currentCount) return;
+
+  recordVideoDrivenCount(nextCount);
+}
+
+function getCurrentVideoRepTimes() {
+  const videoConfig = ACTION_VIDEOS[currentAction - 1];
+  if (!videoConfig || typeof videoConfig === "string" || !Array.isArray(videoConfig.repTimes)) {
+    return [];
+  }
+
+  return videoConfig.repTimes
+    .map(repTime => Number(repTime))
+    .filter(repTime => Number.isFinite(repTime))
+    .sort((first, second) => first - second)
+    .slice(0, 10);
+}
+
+function recordVideoDrivenCount(nextCount) {
+  const previousCount = actionCounts[currentAction - 1] || 0;
+  const safeNextCount = Math.min(10, Math.max(previousCount, nextCount));
+  const countDelta = safeNextCount - previousCount;
+  if (countDelta <= 0) return;
+
+  actionCounts[currentAction - 1] = safeNextCount;
+  currentCount = safeNextCount;
+  totalCount += countDelta;
+  points += countDelta;
+
+  saveExerciseState();
+  localStorage.setItem("totalCount", totalCount);
+  localStorage.setItem("points", points);
+
+  updateActionCountDisplay();
+
+  if (safeNextCount >= 10) {
+    completeCurrentActionFromVideo();
+  }
+}
+
+function completeCurrentActionFromVideo() {
+  stopVideoProgressTracking();
+  setActionBackButtonDisabled(false);
+  if (youtubePlayer?.pauseVideo) {
+    youtubePlayer.pauseVideo();
+  }
+
+  if (actionCounts.every(count => count >= 10)) {
+    completedRounds++;
+    localStorage.setItem("completedRounds", completedRounds);
+
+    currentAction = 1;
+    currentCount = 0;
+    actionCounts = Array(ACTIONS_PER_ROUND).fill(0);
+    saveExerciseState();
+
+    updateHome();
+    updateAchievement();
+
+    alert("🎉 恭喜完成本回合！");
+    setTimeout(() => {
+      showPage("exercisePage");
+    }, 300);
+    return;
+  }
+
+  updateAchievement();
+  alert(`${ACTION_NAMES[currentAction - 1]} 已完成。`);
+  setTimeout(() => {
+    showPage("exercisePage");
+  }, 300);
 }
 
 window.onYouTubeIframeAPIReady = function () {
@@ -352,7 +510,7 @@ function resetRecoveryAction(delay = 0) {
     }
     statusText.innerText = selectedActionComplete
       ? "此動作已完成，請返回選擇其他動作。"
-      : "按下開始，完成動作後才會記錄 1 次。";
+      : "播放影片後會依照影片進度自動記錄次數。";
     setRepProgressMode("action-progress");
     updateRepProgress(0);
     updateActionButtons();
