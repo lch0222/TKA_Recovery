@@ -24,19 +24,19 @@ const ACTION_VIDEOS = [
     url: "https://www.youtube.com/watch?v=dW8bOKk_Jws",
     start: 165,
     end: 323,
-    repTimes: [181, 197, 212, 228, 244, 260, 276, 291, 307, 323]
+    repTimes: [205, 218, 231, 244, 258, 271, 285, 297, 311, 322]
   },
   {
     url: "https://www.youtube.com/watch?v=dW8bOKk_Jws",
     start: 325,
     end: 476,
-    repTimes: [340, 355, 370, 385, 401, 416, 431, 446, 461, 476]
+    repTimes: [360, 374, 385, 398, 410, 422, 435, 449, 461, 475]
   },
   {
     url: "https://www.youtube.com/watch?v=dW8bOKk_Jws",
     start: 478,
     end: 672,
-    repTimes: [497, 517, 536, 556, 575, 594, 614, 633, 653, 672]
+    repTimes: [523, 540, 557, 572, 588, 605, 623, 639, 656, 672]
   }
 ];
 let actionTimer = null;
