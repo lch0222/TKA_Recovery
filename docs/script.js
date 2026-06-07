@@ -12,7 +12,6 @@ const ACTION_NAMES = [
   "膝部屈曲伸直運動"
 ];
 const ACTION_DURATION_MS = 10000;
-const BREAK_DURATION_MS = 20000;
 const ACTION_VIDEOS = [
   {
     url: "https://www.youtube.com/watch?v=dW8bOKk_Jws",
@@ -41,13 +40,13 @@ const ACTION_VIDEOS = [
 ];
 let actionTimer = null;
 let actionStartedAt = 0;
-let breakTimer = null;
-let breakStartedAt = 0;
 let youtubePlayer = null;
 let youtubeApiReady = false;
 let pendingYoutubePlayerInit = false;
 let videoProgressTimer = null;
 let lastAllowedVideoTime = 0;
+let pendingPlayerElementId = "";
+let youtubePlayerInitVersion = 0;
 
 if (currentAction < 1 || currentAction > ACTIONS_PER_ROUND) {
   currentAction = 1;
@@ -112,7 +111,7 @@ function updateExerciseDisplay() {
 }
 
 function selectAction(actionNumber) {
-  if (actionTimer || breakTimer) return;
+  if (actionTimer) return;
   if (actionNumber < 1 || actionNumber > ACTIONS_PER_ROUND) return;
 
   currentAction = actionNumber;
@@ -148,11 +147,14 @@ function updateActionCountDisplay() {
 }
 
 function updateActionVideo() {
-  const video = document.getElementById("actionVideo");
+  const embedUrl = getYouTubeEmbedUrl(ACTION_VIDEOS[currentAction - 1]);
+  stopActionVideo();
+  destroyYouTubePlayer();
+
+  const video = ensureActionVideoFrame();
   const notice = document.getElementById("videoNotice");
   if (!video) return;
 
-  const embedUrl = getYouTubeEmbedUrl(ACTION_VIDEOS[currentAction - 1]);
   lastAllowedVideoTime = getCurrentVideoStartSeconds();
   video.src = embedUrl;
   video.classList.toggle("hidden", !embedUrl);
@@ -163,6 +165,23 @@ function updateActionVideo() {
   if (embedUrl) {
     initYouTubePlayer();
   }
+}
+
+function ensureActionVideoFrame() {
+  const existingVideo = document.getElementById("actionVideo");
+  if (existingVideo) return existingVideo;
+
+  const videoFrame = document.querySelector(".video-frame");
+  if (!videoFrame) return null;
+
+  const video = document.createElement("iframe");
+  video.id = "actionVideo";
+  video.title = "Exercise instruction video";
+  video.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+  video.referrerPolicy = "strict-origin-when-cross-origin";
+  video.allowFullscreen = true;
+  videoFrame.prepend(video);
+  return video;
 }
 
 function getYouTubeEmbedUrl(videoConfig) {
@@ -242,18 +261,48 @@ function loadYouTubeApi() {
 
 function initYouTubePlayer() {
   pendingYoutubePlayerInit = true;
+  pendingPlayerElementId = "actionVideo";
   loadYouTubeApi();
 
   if (!youtubeApiReady || !window.YT?.Player) return;
 
   pendingYoutubePlayerInit = false;
-  if (youtubePlayer) return;
+  destroyYouTubePlayer();
+  const initVersion = ++youtubePlayerInitVersion;
 
-  youtubePlayer = new YT.Player("actionVideo", {
-    events: {
-      onStateChange: handleYouTubeStateChange
-    }
-  });
+  setTimeout(() => {
+    if (initVersion !== youtubePlayerInitVersion) return;
+
+    const playerElement = document.getElementById(pendingPlayerElementId);
+    if (!playerElement || !playerElement.src) return;
+
+    youtubePlayer = new YT.Player(pendingPlayerElementId, {
+      events: {
+        onReady: handleYouTubeReady,
+        onStateChange: handleYouTubeStateChange
+      }
+    });
+  }, 0);
+}
+
+function destroyYouTubePlayer() {
+  stopVideoProgressTracking();
+  youtubePlayerInitVersion++;
+
+  if (youtubePlayer?.destroy) {
+    youtubePlayer.destroy();
+  }
+
+  youtubePlayer = null;
+}
+
+function handleYouTubeReady(event) {
+  const startSeconds = getCurrentVideoStartSeconds();
+  lastAllowedVideoTime = startSeconds;
+
+  if (event.target?.seekTo) {
+    event.target.seekTo(startSeconds, true);
+  }
 }
 
 function handleYouTubeStateChange(event) {
@@ -301,15 +350,29 @@ function getCurrentVideoEndSeconds() {
 
 function startVideoProgressTracking(player) {
   stopVideoProgressTracking();
-  lastAllowedVideoTime = player.getCurrentTime();
+  const startSeconds = getCurrentVideoStartSeconds();
+  const initialTime = player.getCurrentTime();
+  lastAllowedVideoTime = Math.max(startSeconds, initialTime);
+
+  if (initialTime < startSeconds && player.seekTo) {
+    player.seekTo(startSeconds, true);
+  }
+
   updateVideoDrivenCount(lastAllowedVideoTime);
 
   videoProgressTimer = setInterval(() => {
     const currentTime = player.getCurrentTime();
-    const isLikelyFastForward = currentTime > lastAllowedVideoTime + 2.5;
+    const minimumAllowedTime = Math.max(startSeconds, lastAllowedVideoTime);
+    const isLikelyFastForward = currentTime > minimumAllowedTime + 2.5;
+
+    if (currentTime < startSeconds) {
+      player.seekTo(startSeconds, true);
+      lastAllowedVideoTime = startSeconds;
+      return;
+    }
 
     if (isLikelyFastForward) {
-      player.seekTo(lastAllowedVideoTime, true);
+      player.seekTo(minimumAllowedTime, true);
       return;
     }
 
@@ -422,7 +485,7 @@ function updateActionButtons() {
     button.innerText = `${ACTION_NAMES[actionNumber - 1]} (${count}/10)`;
     button.classList.toggle("selected", actionNumber === currentAction);
     button.classList.toggle("complete", count >= 10);
-    button.disabled = Boolean(actionTimer || breakTimer);
+    button.disabled = Boolean(actionTimer);
   });
 }
 
@@ -481,7 +544,7 @@ function stopActionVideo() {
 }
 
 function startRecoveryAction() {
-  if (actionTimer || breakTimer || currentCount >= 10) return;
+  if (actionTimer || currentCount >= 10) return;
 
   const startButton = document.getElementById("startRepButton");
   const statusText = document.getElementById("repStatusText");
@@ -502,33 +565,8 @@ function startRecoveryAction() {
 
       const roundFinished = recordCompletedAction();
       if (!roundFinished) {
-        startBreakTimer();
+        resetRecoveryAction();
       }
-    }
-  }, 100);
-}
-
-function startBreakTimer() {
-  const startButton = document.getElementById("startRepButton");
-  const statusText = document.getElementById("repStatusText");
-  breakStartedAt = Date.now();
-
-  startButton.disabled = true;
-  startButton.innerText = "休息一下";
-  setActionButtonsDisabled(true);
-  setActionBackButtonDisabled(true);
-
-  breakTimer = setInterval(() => {
-    const elapsed = Date.now() - breakStartedAt;
-    const remainingMs = Math.max(0, BREAK_DURATION_MS - elapsed);
-    const remainingSeconds = Math.ceil(remainingMs / 1000);
-
-    statusText.innerText = `休息倒數：${remainingSeconds} 秒`;
-
-    if (remainingMs <= 0) {
-      clearInterval(breakTimer);
-      breakTimer = null;
-      resetRecoveryAction();
     }
   }, 100);
 }
@@ -537,10 +575,6 @@ function resetRecoveryAction(delay = 0) {
   if (actionTimer) {
     clearInterval(actionTimer);
     actionTimer = null;
-  }
-  if (breakTimer) {
-    clearInterval(breakTimer);
-    breakTimer = null;
   }
 
   setTimeout(() => {
