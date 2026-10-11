@@ -1,20 +1,42 @@
 body {
   margin: 0;
   font-family: "Noto Sans TC", Arial, sans-serif;
-  background: #f4f7fb;
-  color: #263238;
+  background: #f6fbf2;
+  color: #0b2f35;
+  font-size: 20px;
 }
 
 header {
-  background: #2f80ed;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #078475;
   color: white;
-  padding: 18px;
-  text-align: center;
-  font-size: 22px;
+  padding: 14px 18px;
+  text-align: left;
+  font-size: 26px;
   font-weight: bold;
   position: sticky;
   top: 0;
   z-index: 9;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+}
+
+.brand-mark {
+  display: grid;
+  place-items: center;
+  flex: 0 0 54px;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: white;
+  color: #078475;
+  font-size: 24px;
+  font-weight: 900;
+}
+
+.brand-title {
+  line-height: 1.15;
 }
 
 .username-display {
@@ -36,7 +58,7 @@ header {
 .container {
   max-width: 980px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 16px;
 }
 
 .container > section:not(#actionPage) {
@@ -44,9 +66,13 @@ header {
   margin: 0 auto;
 }
 
+.container > #homePage {
+  max-width: 980px;
+}
+
 .card {
   background: white;
-  border-radius: 16px;
+  border-radius: 10px;
   padding: 20px;
   margin-bottom: 18px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.08);
@@ -54,8 +80,18 @@ header {
 
 .subtitle {
   color: #607d8b;
-  font-size: 15px;
+  font-size: 20px;
   margin-top: 4px;
+  font-weight: 700;
+}
+
+h2 {
+  font-size: 34px;
+  line-height: 1.2;
+}
+
+h3 {
+  font-size: 28px;
 }
 
 .login-card h2 {
@@ -70,7 +106,7 @@ header {
   display: block;
   margin: 12px 0 6px;
   color: #37474f;
-  font-size: 15px;
+  font-size: 22px;
   font-weight: 700;
 }
 
@@ -82,6 +118,7 @@ header {
   border-radius: 8px;
   color: #263238;
   font: inherit;
+  font-size: 22px;
   background: white;
 }
 
@@ -133,7 +170,7 @@ header {
   display: block;
   margin: 18px 0 6px;
   color: #37474f;
-  font-size: 15px;
+  font-size: 22px;
   font-weight: 700;
 }
 
@@ -147,6 +184,7 @@ header {
   border-radius: 8px;
   color: #263238;
   font: inherit;
+  font-size: 22px;
 }
 
 .pain-form textarea:focus {
@@ -245,12 +283,14 @@ header {
 
 button {
   width: 100%;
-  padding: 14px;
+  min-height: 62px;
+  padding: 16px;
   border: none;
-  border-radius: 12px;
-  background: #2f80ed;
+  border-radius: 10px;
+  background: #078475;
   color: white;
-  font-size: 17px;
+  font-size: 24px;
+  font-weight: 800;
   margin-top: 10px;
   cursor: pointer;
 }
@@ -261,7 +301,9 @@ button:disabled {
 }
 
 button.secondary {
-  background: #90a4ae;
+  background: white;
+  color: #087568;
+  border: 2px solid #9bd5cf;
 }
 
 button.success {
@@ -270,6 +312,268 @@ button.success {
 
 button.reset {
   background: #e74c3c;
+}
+
+.home-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.home-hero h1 {
+  margin: 0;
+  color: #0b2f35;
+  font-size: clamp(44px, 7vw, 64px);
+  line-height: 1.05;
+  letter-spacing: 0;
+}
+
+.home-hero p {
+  margin: 10px 0 0;
+  color: #51606a;
+  font-size: 28px;
+  font-weight: 800;
+}
+
+.today-progress-card {
+  border-radius: 10px;
+  background: rgba(255,255,255,0.92);
+  padding: 18px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.today-progress-card span {
+  color: #078475;
+  font-size: 42px;
+}
+
+.lake-map {
+  position: relative;
+  min-height: 420px;
+  overflow: hidden;
+  border-radius: 10px;
+  margin-bottom: 16px;
+  background:
+    linear-gradient(rgba(255,255,255,0.08), rgba(255,255,255,0.08)),
+    url("./img/lake-map-bg.png") center / cover no-repeat;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.10);
+}
+
+.animal-map {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.map-animal {
+  position: absolute;
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+  transform: translate(-50%, -50%);
+}
+
+.animal-icon {
+  display: grid;
+  place-items: center;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.86);
+  font-size: 58px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.16);
+}
+
+.map-animal.locked .animal-icon {
+  filter: grayscale(1);
+  opacity: 0.72;
+}
+
+.animal-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.9);
+  color: #0b2f35;
+  font-size: 22px;
+  font-weight: 900;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.14);
+  white-space: nowrap;
+}
+
+.map-animal.complete .animal-label::after,
+.friend-card.complete .friend-state::after {
+  content: "✓";
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #078475;
+  color: white;
+}
+
+.map-animal.locked .animal-label::before,
+.friend-card.locked .friend-state::before {
+  content: "🔒";
+}
+
+.home-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.9fr);
+  gap: 16px;
+}
+
+.home-panel {
+  border-radius: 10px;
+  background: rgba(255,255,255,0.94);
+  padding: 18px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+}
+
+.home-panel h2 {
+  margin: 0;
+  color: #0b2f35;
+  font-size: 34px;
+  line-height: 1.15;
+}
+
+.home-panel p {
+  margin: 8px 0 14px;
+  color: #51606a;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.exercise-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.exercise-preview {
+  min-height: 126px;
+  border-radius: 10px;
+  padding: 14px;
+  background: #e9f9ef;
+  color: #0b5960;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.exercise-preview:nth-child(2) {
+  background: #fff4dd;
+  color: #b84510;
+}
+
+.exercise-preview:nth-child(3) {
+  background: #e4f5ff;
+  color: #1266a8;
+}
+
+.exercise-preview:nth-child(4) {
+  background: #f5e9ff;
+  color: #7022a9;
+}
+
+.exercise-preview-icon {
+  display: block;
+  margin-top: 14px;
+  font-size: 42px;
+}
+
+.animal-friends {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.friend-card {
+  min-height: 120px;
+  border-radius: 10px;
+  background: #e9f9ef;
+  padding: 10px;
+  text-align: center;
+}
+
+.friend-card.locked {
+  background: #f1f3f2;
+  color: #667178;
+}
+
+.friend-icon {
+  display: block;
+  font-size: 46px;
+  line-height: 1.1;
+  filter: none;
+}
+
+.friend-card.locked .friend-icon {
+  filter: grayscale(1);
+  opacity: 0.55;
+}
+
+.friend-state {
+  margin-top: 8px;
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.next-animal-message {
+  margin-top: 10px;
+  border-radius: 10px;
+  background: #dff5df;
+  padding: 12px;
+  color: #0b604d;
+  font-size: 22px;
+  font-weight: 900;
+  text-align: center;
+}
+
+.primary-action {
+  display: block;
+  max-width: 780px;
+  min-height: 84px;
+  margin: 16px auto 10px;
+  font-size: 34px;
+  background: #078475;
+  box-shadow: 0 5px 0 #06685d;
+}
+
+.primary-action::before {
+  content: "▶";
+  display: inline-grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  margin-right: 14px;
+  border-radius: 50%;
+  background: white;
+  color: #078475;
+  font-size: 26px;
+}
+
+.quick-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.compact-reset {
+  max-width: 420px;
+  min-height: 48px;
+  margin: 14px auto 0;
+  font-size: 18px;
+  opacity: 0.82;
 }
 
 .count {
@@ -381,12 +685,13 @@ button.reset {
 
 .badge {
   display: inline-block;
-  background: #fff3cd;
-  color: #856404;
-  padding: 8px 12px;
-  border-radius: 20px;
-  margin: 4px;
-  font-size: 14px;
+  background: #dff5df;
+  color: #0b604d;
+  padding: 10px 14px;
+  border-radius: 999px;
+  margin: 5px;
+  font-size: 20px;
+  font-weight: 900;
 }
 
 .hidden {
@@ -410,4 +715,136 @@ ul {
 #badgeImage img{
     width:300px;
     max-width:100%;
+}
+
+.achievement-animals {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.achievement-animals div,
+.achievement-animals > span {
+  border-radius: 10px;
+  background: #e9f9ef;
+  padding: 14px;
+  text-align: center;
+}
+
+.achievement-animals div.locked {
+  background: #f1f3f2;
+  color: #667178;
+}
+
+.achievement-animals span {
+  display: block;
+  font-size: 56px;
+}
+
+.achievement-animals .locked span {
+  filter: grayscale(1);
+  opacity: 0.55;
+}
+
+.achievement-animals p {
+  margin: 8px 0 0;
+  font-size: 20px;
+  font-weight: 900;
+}
+
+@media (max-width: 760px) {
+  body {
+    font-size: 22px;
+  }
+
+  header {
+    padding: 12px 14px;
+  }
+
+  .brand-mark {
+    flex-basis: 48px;
+    width: 48px;
+    height: 48px;
+    font-size: 22px;
+  }
+
+  .brand-title {
+    font-size: 24px;
+  }
+
+  .username-display {
+    top: 76px;
+    right: 10px;
+    font-size: 16px;
+  }
+
+  .container {
+    padding: 12px;
+  }
+
+  .card,
+  .home-panel {
+    padding: 16px;
+  }
+
+  .home-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .home-hero h1 {
+    font-size: 46px;
+  }
+
+  .home-hero p {
+    font-size: 26px;
+  }
+
+  .today-progress-card {
+    font-size: 24px;
+  }
+
+  .lake-map {
+    min-height: 330px;
+  }
+
+  .animal-icon {
+    width: 76px;
+    height: 76px;
+    font-size: 48px;
+  }
+
+  .animal-label {
+    min-height: 38px;
+    padding: 5px 12px;
+    font-size: 20px;
+  }
+
+  .home-grid,
+  .quick-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .exercise-preview-grid,
+  .animal-friends {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .home-panel h2 {
+    font-size: 34px;
+  }
+
+  .primary-action {
+    min-height: 82px;
+    font-size: 32px;
+  }
+
+  button {
+    min-height: 64px;
+    font-size: 24px;
+  }
+
+  .action-selector {
+    grid-template-columns: 1fr;
+  }
 }

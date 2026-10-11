@@ -9,7 +9,10 @@
 
 <body>
   <div id="usernameDisplay" class="username-display hidden"></div>
-  <header>TKA 術後數位復健系統</header>
+  <header>
+    <div class="brand-mark">膝</div>
+    <div class="brand-title">TKA 術後數位復健系統</div>
+  </header>
 
   <div class="container">
 
@@ -74,27 +77,49 @@
 
     <!-- 首頁 -->
     <section id="homePage" class="hidden">
-      <div class="card">
-        <h2>您好，歡迎使用</h2>
-        <div class="subtitle">今日目標：完成 4 回合膝關節復健運動</div>
-
-        <h3>今日完成進度</h3>
-        <p id="roundStatus">⬜第 1 回合 　⬜第 2 回合 　⬜第 3 回合 　⬜第 4 回合</p>
-
-        <div class="progress-bar">
-          <div id="dailyProgress" class="progress">0%</div>
+      <div class="home-hero">
+        <div>
+          <h1>忘憂湖動物探索</h1>
+          <p>完成一回合，遇見一位動物朋友</p>
         </div>
 
-        <p>目前點數：<strong id="points">0</strong> 點</p>
+        <div class="today-progress-card">
+          <strong>今日運動回報</strong>
+          <div><span id="completedRoundCount">0</span> / 4 回合</div>
+          <div class="progress-bar">
+            <div id="dailyProgress" class="progress">0%</div>
+          </div>
+        </div>
       </div>
 
-      <div class="card menu">
-        <button onclick="showPage('exercisePage')">開始復健</button>
-        <button onclick="showPage('motionPage')">手機角度量測</button>
-        <button onclick="showPage('achievementPage')">查看成就</button>
-        <button onclick="showPage('educationPage')" class="secondary">衛教資訊</button>
-        <button onclick="resetAll()" class="reset">系統歸零(開發用)</button>
+      <div class="lake-map" aria-label="今日動物探索進度">
+        <div id="animalMap" class="animal-map"></div>
       </div>
+
+      <div class="home-grid">
+        <div class="home-panel">
+          <h2>四種復健運動</h2>
+          <p>每回合包含四種運動</p>
+          <div id="exercisePreviewGrid" class="exercise-preview-grid"></div>
+        </div>
+
+        <div class="home-panel">
+          <h2>今日動物朋友</h2>
+          <p id="animalFriendSummary">已遇見 0 位朋友</p>
+          <div id="animalFriends" class="animal-friends"></div>
+          <div id="nextAnimalMessage" class="next-animal-message">下一回合，朋友等著你！</div>
+        </div>
+      </div>
+
+      <button onclick="showPage('exercisePage')" class="primary-action">開始本次復健</button>
+
+      <div class="quick-actions">
+        <button onclick="showPage('motionPage')" class="secondary">手機角度量測</button>
+        <button onclick="showPage('achievementPage')" class="secondary">查看紀錄</button>
+        <button onclick="showPage('educationPage')" class="secondary">衛教資訊</button>
+      </div>
+
+      <button onclick="resetAll()" class="reset compact-reset">系統歸零(開發用)</button>
     </section>
 
     <!-- 手機感測器量測頁 -->
@@ -181,7 +206,7 @@
     <!-- 成就頁 -->
     <section id="achievementPage" class="hidden">
       <div class="card">
-        <h2>我的成就</h2>
+        <h2>我的動物朋友</h2>
         <p>累積完成次數：<strong id="totalCount">0</strong> 次</p>
         <p>目前點數：<strong id="achievementPoints">0</strong> 點</p>
 

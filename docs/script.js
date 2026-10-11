@@ -15,6 +15,13 @@ const ACTION_NAMES = [
   "直抬腿運動",
   "膝部屈曲伸直運動"
 ];
+const ACTION_ICONS = ["🦶", "🦵", "↗️", "〰️"];
+const ANIMAL_REWARDS = [
+  { name: "白鵝", icon: "🪿", position: { x: 22, y: 64 } },
+  { name: "綠頭鴨", icon: "🦆", position: { x: 64, y: 65 } },
+  { name: "湖畔鳥", icon: "🐦", position: { x: 31, y: 28 } },
+  { name: "花蝴蝶", icon: "🦋", position: { x: 86, y: 58 } }
+];
 const ACTION_DURATION_MS = 10000;
 const ACTION_VIDEOS = [
   {
@@ -964,14 +971,86 @@ function updateHome() {
     status += `${i <= completedRounds ? "✅" : "⬜"}第 ${i} 回合 　`;
   }
 
-  document.getElementById("roundStatus").innerText = status;
+  const roundStatus = document.getElementById("roundStatus");
+  if (roundStatus) {
+    roundStatus.innerText = status;
+  }
 
-  const percent = Math.round((completedRounds / 4) * 100);
+  const percent = Math.min(100, Math.round((completedRounds / 4) * 100));
   const bar = document.getElementById("dailyProgress");
   bar.style.width = percent + "%";
   bar.innerText = percent + "%";
 
-  document.getElementById("points").innerText = points;
+  const pointsText = document.getElementById("points");
+  if (pointsText) {
+    pointsText.innerText = points;
+  }
+
+  const completedRoundCount = document.getElementById("completedRoundCount");
+  if (completedRoundCount) {
+    completedRoundCount.innerText = Math.min(4, completedRounds);
+  }
+
+  updateAnimalMap();
+  updateAnimalFriends();
+  updateExercisePreview();
+}
+
+function updateAnimalMap() {
+  const animalMap = document.getElementById("animalMap");
+  if (!animalMap) return;
+
+  animalMap.innerHTML = ANIMAL_REWARDS.map((animal, index) => {
+    const roundNumber = index + 1;
+    const isUnlocked = completedRounds >= roundNumber;
+    return `
+      <div class="map-animal ${isUnlocked ? "complete" : "locked"}" style="left:${animal.position.x}%; top:${animal.position.y}%;">
+        <span class="animal-icon">${animal.icon}</span>
+        <span class="animal-label">第 ${roundNumber} 回合</span>
+      </div>
+    `;
+  }).join("");
+}
+
+function updateAnimalFriends() {
+  const animalFriends = document.getElementById("animalFriends");
+  if (!animalFriends) return;
+
+  const unlockedCount = Math.min(ANIMAL_REWARDS.length, completedRounds);
+  const summary = document.getElementById("animalFriendSummary");
+  const nextMessage = document.getElementById("nextAnimalMessage");
+
+  if (summary) {
+    summary.innerText = `已遇見 ${unlockedCount} 位朋友`;
+  }
+  if (nextMessage) {
+    nextMessage.innerText = unlockedCount >= ANIMAL_REWARDS.length
+      ? "今天的朋友都到齊了！"
+      : `下一回合，${ANIMAL_REWARDS[unlockedCount].name}等著你！`;
+  }
+
+  animalFriends.innerHTML = ANIMAL_REWARDS.map((animal, index) => {
+    const roundNumber = index + 1;
+    const isUnlocked = completedRounds >= roundNumber;
+    return `
+      <div class="friend-card ${isUnlocked ? "complete" : "locked"}">
+        <span class="friend-icon">${animal.icon}</span>
+        <div class="friend-state">第 ${roundNumber} 回合</div>
+      </div>
+    `;
+  }).join("");
+}
+
+function updateExercisePreview() {
+  const exercisePreviewGrid = document.getElementById("exercisePreviewGrid");
+  if (!exercisePreviewGrid) return;
+
+  exercisePreviewGrid.innerHTML = ACTION_NAMES.map((name, index) => `
+    <div class="exercise-preview">
+      ${name}
+      <span class="exercise-preview-icon">${ACTION_ICONS[index]}</span>
+    </div>
+  `).join("");
 }
 
 function updateAchievement() {
@@ -980,37 +1059,28 @@ function updateAchievement() {
 
   const badges = document.getElementById("badges");
   badges.innerHTML = "";
+  const badgeImage = document.getElementById("badgeImage");
+  const unlockedAnimals = ANIMAL_REWARDS.filter((animal, index) => completedRounds >= index + 1);
 
-  if (completedRounds >= 4) {
-    badges.innerHTML += `<span class="badge">🏆 今日達標</span>`;
-    document.getElementById("badgeImage").innerHTML =
-      `<img src="${IMG_PATH}goodcat_4.png" alt="成就圖片">`;
+  if (unlockedAnimals.length === 0) {
+    badges.innerHTML = `<span class="badge">尚未遇見動物朋友</span>`;
+    badgeImage.innerHTML = `<div class="achievement-animals"><span>🌱</span><p>完成第 1 回合後解鎖白鵝</p></div>`;
+    return;
   }
-  else if (completedRounds >= 3) {
-    badges.innerHTML += `<span class="badge">🌲 優秀高手</span>`;
-    document.getElementById("badgeImage").innerHTML =
-      `<img src="${IMG_PATH}goodcat_3.png" alt="成就圖片">`;
-  }
-  else if (completedRounds >= 2) {
-    badges.innerHTML += `<span class="badge">🌳 復健成長中</span>`;
-    document.getElementById("badgeImage").innerHTML =
-      `<img src="${IMG_PATH}goodcat_2.png" alt="成就圖片">`;
-  }
-  else if (completedRounds >= 1) {
-    badges.innerHTML += `<span class="badge">🌿 復健新手</span>`;
-    document.getElementById("badgeImage").innerHTML =
-      `<img src="${IMG_PATH}goodcat_1.png" alt="成就圖片">`;
-  }
-  else if (totalCount > 0) {
-    badges.innerHTML += `<span class="badge">🌱 開始今日復建之旅</span>`;
-    document.getElementById("badgeImage").innerHTML =
-      `<img src="${IMG_PATH}goodcat_0.png" alt="成就圖片">`;
-  }
-  else if (totalCount === 0) {
-    badges.innerHTML = `<span class="badge">尚未獲得成就</span>`;
-    document.getElementById("badgeImage").innerHTML =
-      `<img src="${IMG_PATH}startReco.png" alt="成就圖片">`;    
-  }
+
+  badges.innerHTML = unlockedAnimals
+    .map((animal, index) => `<span class="badge">${animal.icon} 第 ${index + 1} 回合：${animal.name}</span>`)
+    .join("");
+  badgeImage.innerHTML = `
+    <div class="achievement-animals">
+      ${ANIMAL_REWARDS.map((animal, index) => `
+        <div class="${completedRounds >= index + 1 ? "complete" : "locked"}">
+          <span>${animal.icon}</span>
+          <p>${completedRounds >= index + 1 ? animal.name : `第 ${index + 1} 回合`}</p>
+        </div>
+      `).join("")}
+    </div>
+  `;
 }
 
 updateHome();
