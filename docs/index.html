@@ -90,9 +90,44 @@
 
       <div class="card menu">
         <button onclick="showPage('exercisePage')">開始復健</button>
+        <button onclick="showPage('motionPage')">手機角度量測</button>
         <button onclick="showPage('achievementPage')">查看成就</button>
         <button onclick="showPage('educationPage')" class="secondary">衛教資訊</button>
         <button onclick="resetAll()" class="reset">系統歸零(開發用)</button>
+      </div>
+    </section>
+
+    <!-- 手機感測器量測頁 -->
+    <section id="motionPage" class="hidden">
+      <div class="card motion-card">
+        <h2>手機角度量測</h2>
+        <div class="subtitle">請將手機固定在小腿側邊，先校正伸直角度，再開始量測。</div>
+
+        <div class="motion-readout">
+          <div>
+            <span id="estimatedAngle">0</span>
+            <small>目前角度</small>
+          </div>
+          <div>
+            <span id="maxEstimatedAngle">0</span>
+            <small>最大角度</small>
+          </div>
+        </div>
+
+        <div class="sensor-grid">
+          <div>Beta：<strong id="sensorBeta">--</strong></div>
+          <div>Gamma：<strong id="sensorGamma">--</strong></div>
+          <div>校正值：<strong id="sensorBaseline">尚未校正</strong></div>
+          <div>狀態：<strong id="sensorStatus">尚未開始</strong></div>
+        </div>
+
+        <button id="startSensorButton" onclick="requestSensorAccess()">啟用手機感測器</button>
+        <button id="calibrateSensorButton" onclick="calibrateLegAngle()" class="secondary" disabled>校正 0 度</button>
+        <button id="startMotionButton" onclick="startMotionMeasurement()" class="success" disabled>開始量測</button>
+        <button id="saveMotionButton" onclick="saveMotionMeasurement()" disabled>儲存本次角度</button>
+        <button onclick="showPage('homePage')" class="secondary">返回首頁</button>
+
+        <div id="motionSaveStatus" class="form-status" role="status"></div>
       </div>
     </section>
 

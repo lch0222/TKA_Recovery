@@ -163,6 +163,67 @@ header {
   text-align: center;
 }
 
+.motion-card h2 {
+  margin-top: 0;
+}
+
+.motion-readout {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 18px 0;
+}
+
+.motion-readout div {
+  border-radius: 8px;
+  background: #eef6ff;
+  padding: 16px;
+  text-align: center;
+}
+
+.motion-readout span {
+  display: block;
+  color: #2f80ed;
+  font-size: 42px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.motion-readout span::after {
+  content: "°";
+  font-size: 22px;
+}
+
+.motion-readout small {
+  display: block;
+  margin-top: 8px;
+  color: #607d8b;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.sensor-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 14px 0 8px;
+  color: #455a64;
+  font-size: 14px;
+}
+
+.sensor-grid div {
+  border-radius: 8px;
+  background: #f7fafc;
+  padding: 10px;
+}
+
+@media (max-width: 420px) {
+  .motion-readout,
+  .sensor-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .progress-bar {
   background: #e0e0e0;
   border-radius: 20px;
