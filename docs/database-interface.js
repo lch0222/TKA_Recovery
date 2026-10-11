@@ -63,33 +63,23 @@ const DATABASE_INTERFACES = {
         mysqlType: "VARCHAR(64)",
         required: false
       },
-      baseline_beta: {
-        source: "baselineBeta",
+      measured_angle: {
+        source: "measuredAngle",
         mysqlType: "DECIMAL(6,2)",
         required: true
       },
-      current_angle: {
-        source: "currentAngle",
+      beta: {
+        source: "beta",
         mysqlType: "DECIMAL(6,2)",
         required: true
       },
-      max_angle: {
-        source: "maxAngle",
+      gamma: {
+        source: "gamma",
         mysqlType: "DECIMAL(6,2)",
-        required: true
+        required: false
       },
-      sample_count: {
-        source: "sampleCount",
-        mysqlType: "INT UNSIGNED",
-        required: true
-      },
-      started_at: {
-        source: "startedAt",
-        mysqlType: "DATETIME",
-        required: true
-      },
-      ended_at: {
-        source: "endedAt",
+      measured_at: {
+        source: "measuredAt",
         mysqlType: "DATETIME",
         required: true
       }

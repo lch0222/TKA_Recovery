@@ -52,12 +52,7 @@ let lastAllowedVideoTime = 0;
 let pendingPlayerElementId = "";
 let youtubePlayerInitVersion = 0;
 let sensorEnabled = false;
-let motionMeasurementActive = false;
 let latestOrientation = null;
-let legAngleBaseline = null;
-let maxLegAngle = 0;
-let motionMeasurementStartedAt = null;
-let motionSampleCount = 0;
 
 if (currentAction < 1 || currentAction > ACTIONS_PER_ROUND) {
   currentAction = 1;
@@ -221,9 +216,6 @@ function showPage(pageId) {
     stopActionVideo();
     resetRecoveryAction();
   }
-  if (pageId !== "motionPage") {
-    stopMotionMeasurement();
-  }
 
   document.querySelectorAll("section").forEach(section => {
     section.classList.add("hidden");
@@ -240,6 +232,7 @@ function showPage(pageId) {
     updatePainScoreDisplay();
   }
   if (pageId === "motionPage") {
+    requestSensorAccess();
     updateMotionDisplay();
   }
 
@@ -267,11 +260,9 @@ function selectAction(actionNumber) {
 }
 
 async function requestSensorAccess() {
-  const statusText = document.getElementById("sensorStatus");
-
   if (!window.DeviceOrientationEvent) {
     setSensorStatus("此裝置或瀏覽器不支援姿態感測器");
-    return;
+    return false;
   }
 
   try {
@@ -279,7 +270,7 @@ async function requestSensorAccess() {
       const permission = await DeviceOrientationEvent.requestPermission();
       if (permission !== "granted") {
         setSensorStatus("未取得感測器權限");
-        return;
+        return false;
       }
     }
 
@@ -288,13 +279,12 @@ async function requestSensorAccess() {
       sensorEnabled = true;
     }
 
-    setSensorStatus("感測器已啟用，請先校正 0 度");
-    setButtonDisabled("startSensorButton", true);
-    setButtonDisabled("calibrateSensorButton", false);
-    if (statusText) statusText.innerText = "等待校正";
+    setSensorStatus("感測器已啟用，請彎曲到最大角度後記錄");
+    return true;
   } catch (error) {
     console.error(error);
-    setSensorStatus("感測器啟用失敗");
+    setSensorStatus("感測器啟用失敗，請按記錄此角度再試一次");
+    return false;
   }
 }
 
@@ -311,80 +301,37 @@ function handleDeviceOrientation(event) {
     return;
   }
 
-  if (motionMeasurementActive) {
-    const angle = getCurrentEstimatedLegAngle();
-    maxLegAngle = Math.max(maxLegAngle, angle);
-    motionSampleCount++;
-  }
-
   updateMotionDisplay();
-}
-
-function calibrateLegAngle() {
-  if (!latestOrientation || !Number.isFinite(latestOrientation.beta)) {
-    setSensorStatus("請先保持手機固定並等待感測器讀值");
-    return;
-  }
-
-  legAngleBaseline = latestOrientation.beta;
-  maxLegAngle = 0;
-  motionSampleCount = 0;
-  setButtonDisabled("startMotionButton", false);
-  setButtonDisabled("saveMotionButton", true);
-  setSensorStatus("已校正，請開始量測");
-  updateMotionDisplay();
-}
-
-function startMotionMeasurement() {
-  if (legAngleBaseline === null) {
-    setSensorStatus("請先校正 0 度");
-    return;
-  }
-
-  motionMeasurementActive = true;
-  motionMeasurementStartedAt = new Date();
-  maxLegAngle = 0;
-  motionSampleCount = 0;
-  setButtonDisabled("startMotionButton", true);
-  setButtonDisabled("saveMotionButton", false);
-  setSensorStatus("量測中");
-  updateMotionDisplay();
-}
-
-function stopMotionMeasurement() {
-  if (!motionMeasurementActive) return;
-
-  motionMeasurementActive = false;
-  setButtonDisabled("startMotionButton", legAngleBaseline === null);
-  setSensorStatus("量測已停止");
 }
 
 async function saveMotionMeasurement() {
-  if (!motionMeasurementStartedAt || motionSampleCount === 0) {
-    setSensorStatus("尚未取得足夠量測資料");
+  if (!sensorEnabled) {
+    const granted = await requestSensorAccess();
+    if (!granted) return;
+  }
+
+  if (!latestOrientation || !Number.isFinite(latestOrientation.beta)) {
+    setSensorStatus("尚未取得角度資料，請保持手機固定後再試");
     return;
   }
 
   const statusText = document.getElementById("motionSaveStatus");
+  const measuredAt = new Date();
   const record = {
     username: currentUsername,
     date: getTodayKey(),
     actionName: ACTION_NAMES[currentAction - 1],
-    baselineBeta: roundSensorValue(legAngleBaseline),
-    currentAngle: roundSensorValue(getCurrentEstimatedLegAngle()),
-    maxAngle: roundSensorValue(maxLegAngle),
-    sampleCount: motionSampleCount,
-    startedAt: motionMeasurementStartedAt.toISOString(),
-    endedAt: new Date().toISOString()
+    measuredAngle: roundSensorValue(getCurrentEstimatedLegAngle()),
+    beta: roundSensorValue(latestOrientation.beta),
+    gamma: roundSensorValue(latestOrientation.gamma),
+    measuredAt: measuredAt.toISOString()
   };
 
   try {
-    stopMotionMeasurement();
     if (statusText) statusText.innerText = "儲存中...";
     await submitMotionMeasurement(record);
-    if (statusText) statusText.innerText = "角度資料已儲存";
-    setSensorStatus("已儲存，可重新開始量測");
-    setButtonDisabled("saveMotionButton", true);
+    if (statusText) statusText.innerText = `已記錄 ${record.measuredAngle}°`;
+    setSensorStatus("角度已記錄，可再次彎曲後重新記錄");
   } catch (error) {
     console.error(error);
     if (statusText) statusText.innerText = "儲存失敗，請稍後再試";
@@ -392,18 +339,16 @@ async function saveMotionMeasurement() {
 }
 
 function getCurrentEstimatedLegAngle() {
-  if (!latestOrientation || legAngleBaseline === null) return 0;
+  if (!latestOrientation || !Number.isFinite(latestOrientation.beta)) return 0;
 
-  return Math.abs(latestOrientation.beta - legAngleBaseline);
+  return Math.min(180, Math.abs(latestOrientation.beta));
 }
 
 function updateMotionDisplay() {
   const currentAngle = getCurrentEstimatedLegAngle();
   setElementText("estimatedAngle", roundSensorValue(currentAngle));
-  setElementText("maxEstimatedAngle", roundSensorValue(maxLegAngle));
   setElementText("sensorBeta", formatSensorValue(latestOrientation?.beta));
   setElementText("sensorGamma", formatSensorValue(latestOrientation?.gamma));
-  setElementText("sensorBaseline", legAngleBaseline === null ? "尚未校正" : formatSensorValue(legAngleBaseline));
 }
 
 function setSensorStatus(message) {
