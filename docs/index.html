@@ -8,12 +8,34 @@
 </head>
 
 <body>
+  <div id="usernameDisplay" class="username-display hidden"></div>
   <header>TKA 術後數位復健系統</header>
 
   <div class="container">
 
+    <!-- 登入頁 -->
+    <section id="loginPage">
+      <div class="card login-card">
+        <h2>登入</h2>
+        <div class="subtitle">請輸入復健紀錄資料</div>
+
+        <form id="loginForm" class="login-form" onsubmit="handleLogin(event)">
+          <label for="surgeryDate">開刀日期</label>
+          <input id="surgeryDate" name="surgeryDate" type="date" required />
+
+          <label for="wardNumber">病房號碼</label>
+          <input id="wardNumber" name="wardNumber" type="text" inputmode="numeric" autocomplete="off" required />
+
+          <label for="bedNumber">床號</label>
+          <input id="bedNumber" name="bedNumber" type="text" autocomplete="off" required />
+
+          <button type="submit">登入</button>
+        </form>
+      </div>
+    </section>
+
     <!-- 首頁 -->
-    <section id="homePage">
+    <section id="homePage" class="hidden">
       <div class="card">
         <h2>您好，歡迎使用</h2>
         <div class="subtitle">今日目標：完成 4 回合膝關節復健運動</div>

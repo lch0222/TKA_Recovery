@@ -3,6 +3,9 @@ let currentAction = Number(localStorage.getItem("currentAction")) || 1;
 let totalCount = Number(localStorage.getItem("totalCount")) || 0;
 let completedRounds = Number(localStorage.getItem("completedRounds")) || 0;
 let points = Number(localStorage.getItem("points")) || 0;
+const AUTH_COOKIE_NAME = "tkaRecoveryUsername";
+let currentUsername = getCookie(AUTH_COOKIE_NAME) || localStorage.getItem(AUTH_COOKIE_NAME) || "";
+const show_user_name = true;
 const IMG_PATH = "./img/";
 const ACTIONS_PER_ROUND = 4;
 const ACTION_NAMES = [
@@ -56,6 +59,57 @@ if (currentAction < 1 || currentAction > ACTIONS_PER_ROUND) {
 let actionCounts = loadActionCounts();
 currentCount = actionCounts[currentAction - 1] || 0;
 
+function getCookie(name) {
+  const cookies = document.cookie ? document.cookie.split("; ") : [];
+  const cookie = cookies.find(item => item.startsWith(`${name}=`));
+  return cookie ? decodeURIComponent(cookie.split("=").slice(1).join("=")) : "";
+}
+
+function setCookie(name, value, daysToExpire) {
+  const expires = new Date(Date.now() + daysToExpire * 24 * 60 * 60 * 1000).toUTCString();
+  document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Lax`;
+}
+
+function buildUsername(surgeryDate, wardNumber, bedNumber) {
+  return `${surgeryDate.split("-").join("")}${wardNumber.trim()}${bedNumber.trim()}`;
+}
+
+function updateUsernameDisplay() {
+  const usernameDisplay = document.getElementById("usernameDisplay");
+  if (!usernameDisplay) return;
+  if (!show_user_name) return;
+
+  usernameDisplay.innerText = currentUsername;
+  usernameDisplay.classList.toggle("hidden", !currentUsername);
+}
+
+function handleLogin(event) {
+  event.preventDefault();
+
+  const surgeryDate = document.getElementById("surgeryDate").value;
+  const wardNumber = document.getElementById("wardNumber").value;
+  const bedNumber = document.getElementById("bedNumber").value;
+  const username = buildUsername(surgeryDate, wardNumber, bedNumber);
+
+  if (!username) return;
+
+  currentUsername = username;
+  setCookie(AUTH_COOKIE_NAME, username, 365);
+  localStorage.setItem(AUTH_COOKIE_NAME, username);
+  showPage("homePage");
+}
+
+function initAuthPage() {
+  updateUsernameDisplay();
+
+  if (currentUsername) {
+    showPage("homePage");
+    return;
+  }
+
+  showPage("loginPage");
+}
+
 function loadActionCounts() {
   try {
     const savedCounts = JSON.parse(localStorage.getItem("actionCounts") || "[]");
@@ -79,6 +133,12 @@ function saveExerciseState() {
 }
 
 function showPage(pageId) {
+  if (!currentUsername && pageId !== "loginPage") {
+    pageId = "loginPage";
+  }
+
+  updateUsernameDisplay();
+
   if (pageId !== "actionPage") {
     stopActionVideo();
     resetRecoveryAction();
@@ -757,3 +817,4 @@ function updateAchievement() {
 
 updateHome();
 updateAchievement();
+initAuthPage();

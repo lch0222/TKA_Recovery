@@ -14,6 +14,22 @@ header {
   font-weight: bold;
 }
 
+.username-display {
+  position: fixed;
+  top: 12px;
+  right: 14px;
+  z-index: 10;
+  max-width: min(260px, calc(100vw - 28px));
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.94);
+  color: #263238;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.14);
+  font-size: 14px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
 .container {
   max-width: 980px;
   margin: 0 auto;
@@ -37,6 +53,39 @@ header {
   color: #607d8b;
   font-size: 15px;
   margin-top: 4px;
+}
+
+.login-card h2 {
+  margin-top: 0;
+}
+
+.login-form {
+  margin-top: 18px;
+}
+
+.login-form label {
+  display: block;
+  margin: 12px 0 6px;
+  color: #37474f;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.login-form input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 13px 12px;
+  border: 1px solid #cfd8dc;
+  border-radius: 8px;
+  color: #263238;
+  font: inherit;
+  background: white;
+}
+
+.login-form input:focus {
+  border-color: #2f80ed;
+  box-shadow: 0 0 0 3px rgba(47, 128, 237, 0.16);
+  outline: none;
 }
 
 .progress-bar {
