@@ -12,6 +12,9 @@ header {
   text-align: center;
   font-size: 22px;
   font-weight: bold;
+  position: sticky;
+  top: 0;
+  z-index: 9;
 }
 
 .username-display {
@@ -86,6 +89,78 @@ header {
   border-color: #2f80ed;
   box-shadow: 0 0 0 3px rgba(47, 128, 237, 0.16);
   outline: none;
+}
+
+.pain-card h2 {
+  margin-top: 0;
+}
+
+.pain-form {
+  margin-top: 18px;
+}
+
+.vas-value {
+  color: #2f80ed;
+  font-size: 52px;
+  font-weight: 800;
+  line-height: 1;
+  text-align: center;
+}
+
+.vas-value small {
+  color: #607d8b;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.pain-form input[type="range"] {
+  width: 100%;
+  margin: 24px 0 10px;
+  accent-color: #2f80ed;
+}
+
+.vas-labels {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: #607d8b;
+  font-size: 13px;
+  line-height: 1.35;
+  text-align: center;
+}
+
+.pain-form label {
+  display: block;
+  margin: 18px 0 6px;
+  color: #37474f;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.pain-form textarea {
+  box-sizing: border-box;
+  width: 100%;
+  resize: vertical;
+  min-height: 84px;
+  padding: 12px;
+  border: 1px solid #cfd8dc;
+  border-radius: 8px;
+  color: #263238;
+  font: inherit;
+}
+
+.pain-form textarea:focus {
+  border-color: #2f80ed;
+  box-shadow: 0 0 0 3px rgba(47, 128, 237, 0.16);
+  outline: none;
+}
+
+.form-status {
+  min-height: 20px;
+  margin-top: 10px;
+  color: #607d8b;
+  font-size: 14px;
+  text-align: center;
 }
 
 .progress-bar {

@@ -34,6 +34,44 @@
       </div>
     </section>
 
+    <!-- 疼痛評估頁 -->
+    <section id="painAssessmentPage" class="hidden">
+      <div class="card pain-card">
+        <h2>疼痛評估</h2>
+        <div class="subtitle">請使用 VAS 視覺類比量表記錄今天的疼痛程度</div>
+
+        <form id="painAssessmentForm" class="pain-form" onsubmit="handlePainAssessment(event)">
+          <div class="vas-value">
+            <span id="painScoreDisplay">0</span>
+            <small>/ 10</small>
+          </div>
+
+          <input
+            id="painScore"
+            name="painScore"
+            type="range"
+            min="0"
+            max="10"
+            step="1"
+            value="0"
+            oninput="updatePainScoreDisplay()"
+          />
+
+          <div class="vas-labels" aria-hidden="true">
+            <span>0<br />不痛</span>
+            <span>5<br />中度疼痛</span>
+            <span>10<br />最痛</span>
+          </div>
+
+          <label for="painNote">備註</label>
+          <textarea id="painNote" name="painNote" rows="3" placeholder="可輸入疼痛位置或其他狀況"></textarea>
+
+          <button id="painSubmitButton" type="submit">送出評估</button>
+          <div id="painAssessmentStatus" class="form-status" role="status"></div>
+        </form>
+      </div>
+    </section>
+
     <!-- 首頁 -->
     <section id="homePage" class="hidden">
       <div class="card">
@@ -147,6 +185,7 @@
     </section>
 
   </div>
+  <script src="database-interface.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

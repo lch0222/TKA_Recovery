@@ -4,6 +4,7 @@ let totalCount = Number(localStorage.getItem("totalCount")) || 0;
 let completedRounds = Number(localStorage.getItem("completedRounds")) || 0;
 let points = Number(localStorage.getItem("points")) || 0;
 const AUTH_COOKIE_NAME = "tkaRecoveryUsername";
+const PAIN_ASSESSMENT_PREFIX = "painAssessment";
 let currentUsername = getCookie(AUTH_COOKIE_NAME) || localStorage.getItem(AUTH_COOKIE_NAME) || "";
 const show_user_name = true;
 const IMG_PATH = "./img/";
@@ -96,18 +97,84 @@ function handleLogin(event) {
   currentUsername = username;
   setCookie(AUTH_COOKIE_NAME, username, 365);
   localStorage.setItem(AUTH_COOKIE_NAME, username);
-  showPage("homePage");
+  showNextRequiredPage();
 }
 
 function initAuthPage() {
   updateUsernameDisplay();
 
   if (currentUsername) {
-    showPage("homePage");
+    showNextRequiredPage();
     return;
   }
 
   showPage("loginPage");
+}
+
+function showNextRequiredPage() {
+  if (!currentUsername) {
+    showPage("loginPage");
+    return;
+  }
+
+  showPage(hasCompletedTodaysPainAssessment() ? "homePage" : "painAssessmentPage");
+}
+
+function getTodayKey() {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function getPainAssessmentStorageKey(dateKey = getTodayKey()) {
+  return `${PAIN_ASSESSMENT_PREFIX}:${currentUsername}:${dateKey}`;
+}
+
+function hasCompletedTodaysPainAssessment() {
+  if (!currentUsername) return false;
+  return Boolean(localStorage.getItem(getPainAssessmentStorageKey()));
+}
+
+function updatePainScoreDisplay() {
+  const painScore = document.getElementById("painScore");
+  const painScoreDisplay = document.getElementById("painScoreDisplay");
+  if (!painScore || !painScoreDisplay) return;
+
+  painScoreDisplay.innerText = painScore.value;
+}
+
+async function handlePainAssessment(event) {
+  event.preventDefault();
+
+  const painScore = document.getElementById("painScore");
+  const painNote = document.getElementById("painNote");
+  const statusText = document.getElementById("painAssessmentStatus");
+  const submitButton = document.getElementById("painSubmitButton");
+  const dateKey = getTodayKey();
+  const record = {
+    username: currentUsername,
+    date: dateKey,
+    vasScore: Number(painScore.value),
+    note: painNote.value.trim(),
+    createdAt: new Date().toISOString()
+  };
+
+  if (submitButton) submitButton.disabled = true;
+  if (statusText) statusText.innerText = "儲存中...";
+
+  try {
+    await submitPainAssessment(record);
+    localStorage.setItem(getPainAssessmentStorageKey(dateKey), JSON.stringify(record));
+    if (statusText) statusText.innerText = "已完成疼痛評估";
+    showPage("homePage");
+  } catch (error) {
+    console.error(error);
+    if (statusText) statusText.innerText = "儲存失敗，請稍後再試";
+  } finally {
+    if (submitButton) submitButton.disabled = false;
+  }
 }
 
 function loadActionCounts() {
@@ -137,6 +204,10 @@ function showPage(pageId) {
     pageId = "loginPage";
   }
 
+  if (currentUsername && pageId !== "loginPage" && pageId !== "painAssessmentPage" && !hasCompletedTodaysPainAssessment()) {
+    pageId = "painAssessmentPage";
+  }
+
   updateUsernameDisplay();
 
   if (pageId !== "actionPage") {
@@ -154,6 +225,9 @@ function showPage(pageId) {
   }
   if (pageId === "actionPage") {
     resetActionPage();
+  }
+  if (pageId === "painAssessmentPage") {
+    updatePainScoreDisplay();
   }
 
   updateHome();
