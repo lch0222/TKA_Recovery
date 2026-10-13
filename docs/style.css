@@ -478,12 +478,6 @@ button.reset {
   content: "🔒";
 }
 
-.home-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.9fr);
-  gap: 16px;
-}
-
 .home-panel {
   border-radius: 10px;
   background: rgba(255,255,255,0.94);
@@ -503,43 +497,6 @@ button.reset {
   color: #51606a;
   font-size: 22px;
   font-weight: 700;
-}
-
-.exercise-preview-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.exercise-preview {
-  min-height: 126px;
-  border-radius: 10px;
-  padding: 14px;
-  background: #e9f9ef;
-  color: #0b5960;
-  font-size: 22px;
-  font-weight: 900;
-}
-
-.exercise-preview:nth-child(2) {
-  background: #fff4dd;
-  color: #b84510;
-}
-
-.exercise-preview:nth-child(3) {
-  background: #e4f5ff;
-  color: #1266a8;
-}
-
-.exercise-preview:nth-child(4) {
-  background: #f5e9ff;
-  color: #7022a9;
-}
-
-.exercise-preview-icon {
-  display: block;
-  margin-top: 14px;
-  font-size: 42px;
 }
 
 .animal-friends {
@@ -615,7 +572,7 @@ button.reset {
 
 .quick-actions {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
   max-width: 860px;
   margin: 0 auto;
@@ -873,12 +830,10 @@ ul {
     font-size: 20px;
   }
 
-  .home-grid,
   .quick-actions {
     grid-template-columns: 1fr;
   }
 
-  .exercise-preview-grid,
   .animal-friends {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }

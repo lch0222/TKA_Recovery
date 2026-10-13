@@ -15,7 +15,6 @@ const ACTION_NAMES = [
   "直抬腿運動",
   "膝部屈曲伸直運動"
 ];
-const ACTION_ICONS = ["🦶", "🦵", "↗️", "〰️"];
 const ANIMAL_REWARDS = [
   { name: "白鵝", icon: "🪿", position: { x: 22, y: 64 } },
   { name: "綠頭鴨", icon: "🦆", position: { x: 64, y: 65 } },
@@ -170,6 +169,15 @@ function updatePainScoreDisplay() {
   if (painForm) painForm.style.setProperty("--pain-color", currentLevel.color);
 }
 
+function openPainAssessment() {
+  const painForm = document.getElementById("painAssessmentForm");
+  const statusText = document.getElementById("painAssessmentStatus");
+
+  if (painForm) painForm.reset();
+  if (statusText) statusText.innerText = "";
+  showPage("painAssessmentPage");
+}
+
 async function handlePainAssessment(event) {
   event.preventDefault();
 
@@ -252,6 +260,10 @@ function showPage(pageId) {
     resetActionPage();
   }
   if (pageId === "painAssessmentPage") {
+    const painBackButton = document.getElementById("painBackButton");
+    if (painBackButton) {
+      painBackButton.classList.toggle("hidden", !hasCompletedTodaysPainAssessment());
+    }
     updatePainScoreDisplay();
   }
   if (pageId === "motionPage") {
@@ -1009,7 +1021,6 @@ function updateHome() {
 
   updateAnimalMap();
   updateAnimalFriends();
-  updateExercisePreview();
 }
 
 function updateAnimalMap() {
@@ -1055,18 +1066,6 @@ function updateAnimalFriends() {
       </div>
     `;
   }).join("");
-}
-
-function updateExercisePreview() {
-  const exercisePreviewGrid = document.getElementById("exercisePreviewGrid");
-  if (!exercisePreviewGrid) return;
-
-  exercisePreviewGrid.innerHTML = ACTION_NAMES.map((name, index) => `
-    <div class="exercise-preview">
-      ${name}
-      <span class="exercise-preview-icon">${ACTION_ICONS[index]}</span>
-    </div>
-  `).join("");
 }
 
 function updateAchievement() {

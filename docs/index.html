@@ -74,6 +74,7 @@
           <textarea id="painNote" name="painNote" rows="3" placeholder="可輸入疼痛位置或其他狀況"></textarea>
 
           <button id="painSubmitButton" type="submit">送出評估</button>
+          <button id="painBackButton" type="button" class="secondary hidden" onclick="showPage('homePage')">返回首頁</button>
           <div id="painAssessmentStatus" class="form-status" role="status"></div>
         </form>
       </div>
@@ -100,24 +101,17 @@
         <div id="animalMap" class="animal-map"></div>
       </div>
 
-      <div class="home-grid">
-        <div class="home-panel">
-          <h2>四種復健運動</h2>
-          <p>每回合包含四種運動</p>
-          <div id="exercisePreviewGrid" class="exercise-preview-grid"></div>
-        </div>
-
-        <div class="home-panel">
-          <h2>今日動物朋友</h2>
-          <p id="animalFriendSummary">已遇見 0 位朋友</p>
-          <div id="animalFriends" class="animal-friends"></div>
-          <div id="nextAnimalMessage" class="next-animal-message">下一回合，朋友等著你！</div>
-        </div>
+      <div class="home-panel">
+        <h2>今日動物朋友</h2>
+        <p id="animalFriendSummary">已遇見 0 位朋友</p>
+        <div id="animalFriends" class="animal-friends"></div>
+        <div id="nextAnimalMessage" class="next-animal-message">下一回合，朋友等著你！</div>
       </div>
 
       <button onclick="showPage('exercisePage')" class="primary-action">開始本次復健</button>
 
       <div class="quick-actions">
+        <button onclick="openPainAssessment()" class="secondary">疼痛評估</button>
         <button onclick="showPage('motionPage')" class="secondary">手機角度量測</button>
         <button onclick="showPage('achievementPage')" class="secondary">查看紀錄</button>
         <button onclick="showPage('educationPage')" class="secondary">衛教資訊</button>
