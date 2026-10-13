@@ -92,6 +92,36 @@ function updateUsernameDisplay() {
   usernameDisplay.classList.toggle("hidden", !currentUsername);
 }
 
+function closeAppMenu() {
+  const appMenu = document.getElementById("appMenu");
+  const menuToggleButton = document.getElementById("menuToggleButton");
+  if (!appMenu || !menuToggleButton) return;
+
+  appMenu.classList.add("hidden");
+  menuToggleButton.setAttribute("aria-expanded", "false");
+  menuToggleButton.setAttribute("aria-label", "開啟功能選單");
+}
+
+function toggleAppMenu() {
+  const appMenu = document.getElementById("appMenu");
+  const menuToggleButton = document.getElementById("menuToggleButton");
+  if (!appMenu || !menuToggleButton) return;
+
+  const willOpen = appMenu.classList.contains("hidden");
+  appMenu.classList.toggle("hidden", !willOpen);
+  menuToggleButton.setAttribute("aria-expanded", String(willOpen));
+  menuToggleButton.setAttribute("aria-label", willOpen ? "關閉功能選單" : "開啟功能選單");
+}
+
+function updateAppMenuAvailability() {
+  const menuToggleButton = document.getElementById("menuToggleButton");
+  if (!menuToggleButton) return;
+
+  const canUseMenu = Boolean(currentUsername && hasCompletedTodaysPainAssessment());
+  menuToggleButton.classList.toggle("hidden", !canUseMenu);
+  if (!canUseMenu) closeAppMenu();
+}
+
 function handleLogin(event) {
   event.preventDefault();
 
@@ -244,7 +274,9 @@ function showPage(pageId) {
     pageId = "painAssessmentPage";
   }
 
+  closeAppMenu();
   updateUsernameDisplay();
+  updateAppMenuAvailability();
 
   if (pageId !== "actionPage") {
     stopActionVideo();
@@ -1103,13 +1135,33 @@ function updateAchievement() {
 
 const openPainAssessmentButton = document.getElementById("openPainAssessmentButton");
 const painScoreInput = document.getElementById("painScore");
+const menuToggleButton = document.getElementById("menuToggleButton");
 
 if (openPainAssessmentButton) {
-  openPainAssessmentButton.addEventListener("click", openPainAssessment);
+  openPainAssessmentButton.addEventListener("click", () => {
+    closeAppMenu();
+    openPainAssessment();
+  });
 }
 if (painScoreInput) {
   painScoreInput.addEventListener("input", updatePainScoreDisplay);
 }
+if (menuToggleButton) {
+  menuToggleButton.addEventListener("click", toggleAppMenu);
+}
+
+document.querySelectorAll("[data-menu-page]").forEach(button => {
+  button.addEventListener("click", () => showPage(button.dataset.menuPage));
+});
+
+document.addEventListener("click", event => {
+  const header = document.querySelector("header");
+  if (header && !header.contains(event.target)) closeAppMenu();
+});
+
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape") closeAppMenu();
+});
 
 updateHome();
 updateAchievement();

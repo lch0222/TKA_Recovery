@@ -4,13 +4,30 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TKA 術後數位復健系統</title>
-  <link rel="stylesheet" href="style.css?v=20261013-3" />
+  <link rel="stylesheet" href="style.css?v=20261013-4" />
 </head>
 
 <body>
   <div id="usernameDisplay" class="username-display hidden"></div>
   <header>
     <div class="brand-title">膝關節術後數位復健系統</div>
+    <button
+      id="menuToggleButton"
+      class="menu-toggle hidden"
+      type="button"
+      aria-label="開啟功能選單"
+      aria-controls="appMenu"
+      aria-expanded="false"
+    >
+      <span class="hamburger-lines" aria-hidden="true"><i></i><i></i><i></i></span>
+    </button>
+
+    <nav id="appMenu" class="app-menu hidden" aria-label="功能選單">
+      <button id="openPainAssessmentButton" type="button" class="secondary">疼痛評估</button>
+      <button type="button" class="secondary" data-menu-page="motionPage">手機角度量測</button>
+      <button type="button" class="secondary" data-menu-page="achievementPage">查看紀錄</button>
+      <button type="button" class="secondary" data-menu-page="educationPage">衛教資訊</button>
+    </nav>
   </header>
 
   <div class="container">
@@ -101,20 +118,13 @@
       </div>
 
       <div class="home-panel">
-        <h2>今日動物朋友</h2>
+        <h2>動物朋友</h2>
         <p id="animalFriendSummary">已遇見 0 位朋友</p>
         <div id="animalFriends" class="animal-friends"></div>
         <div id="nextAnimalMessage" class="next-animal-message">下一回合，朋友等著你！</div>
       </div>
 
       <button onclick="showPage('exercisePage')" class="primary-action">開始本次復健</button>
-
-      <div class="quick-actions">
-        <button id="openPainAssessmentButton" type="button" class="secondary">疼痛評估</button>
-        <button onclick="showPage('motionPage')" class="secondary">手機角度量測</button>
-        <button onclick="showPage('achievementPage')" class="secondary">查看紀錄</button>
-        <button onclick="showPage('educationPage')" class="secondary">衛教資訊</button>
-      </div>
 
       <button onclick="resetAll()" class="reset compact-reset">系統歸零(開發用)</button>
     </section>
@@ -234,7 +244,7 @@
     </section>
 
   </div>
-  <script src="database-interface.js?v=20261013-3"></script>
-  <script src="script.js?v=20261013-3"></script>
+  <script src="database-interface.js?v=20261013-4"></script>
+  <script src="script.js?v=20261013-4"></script>
 </body>
 </html>
