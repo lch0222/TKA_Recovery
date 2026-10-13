@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TKA 術後數位復健系統</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css?v=20261013-3" />
 </head>
 
 <body>
@@ -61,13 +61,12 @@
             step="1"
             value="0"
             aria-label="今日疼痛程度，0 分不痛，10 分最痛"
-            oninput="updatePainScoreDisplay()"
           />
 
           <div class="vas-labels" aria-hidden="true">
-            <span class="pain-label pain-label-none"><b>😊</b>不痛</span>
-            <span class="pain-label pain-label-medium"><b>😣</b>中度疼痛</span>
-            <span class="pain-label pain-label-worst"><b>😭</b>最痛</span>
+            <span class="pain-label pain-label-none"><span class="pain-label-emoji">😊</span><span>不痛</span></span>
+            <span class="pain-label pain-label-medium"><span class="pain-label-emoji">😣</span><span>中度疼痛</span></span>
+            <span class="pain-label pain-label-worst"><span class="pain-label-emoji">😭</span><span>最痛</span></span>
           </div>
 
           <label for="painNote">備註</label>
@@ -111,7 +110,7 @@
       <button onclick="showPage('exercisePage')" class="primary-action">開始本次復健</button>
 
       <div class="quick-actions">
-        <button onclick="openPainAssessment()" class="secondary">疼痛評估</button>
+        <button id="openPainAssessmentButton" type="button" class="secondary">疼痛評估</button>
         <button onclick="showPage('motionPage')" class="secondary">手機角度量測</button>
         <button onclick="showPage('achievementPage')" class="secondary">查看紀錄</button>
         <button onclick="showPage('educationPage')" class="secondary">衛教資訊</button>
@@ -235,7 +234,7 @@
     </section>
 
   </div>
-  <script src="database-interface.js"></script>
-  <script src="script.js"></script>
+  <script src="database-interface.js?v=20261013-3"></script>
+  <script src="script.js?v=20261013-3"></script>
 </body>
 </html>

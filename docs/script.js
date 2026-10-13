@@ -166,7 +166,10 @@ function updatePainScoreDisplay() {
   painScoreDisplay.innerText = score;
   if (painEmoji) painEmoji.innerText = currentLevel.emoji;
   if (painLevelText) painLevelText.innerText = currentLevel.label;
-  if (painForm) painForm.style.setProperty("--pain-color", currentLevel.color);
+  if (painForm) {
+    painForm.style.setProperty("--pain-color", currentLevel.color);
+    painForm.style.setProperty("--pain-progress", `${score * 10}%`);
+  }
 }
 
 function openPainAssessment() {
@@ -1096,6 +1099,16 @@ function updateAchievement() {
       `).join("")}
     </div>
   `;
+}
+
+const openPainAssessmentButton = document.getElementById("openPainAssessmentButton");
+const painScoreInput = document.getElementById("painScore");
+
+if (openPainAssessmentButton) {
+  openPainAssessmentButton.addEventListener("click", openPainAssessment);
+}
+if (painScoreInput) {
+  painScoreInput.addEventListener("input", updatePainScoreDisplay);
 }
 
 updateHome();
