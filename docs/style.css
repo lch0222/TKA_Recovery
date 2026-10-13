@@ -133,11 +133,32 @@ h3 {
 }
 
 .pain-form {
+  --pain-color: #1c9b67;
   margin-top: 18px;
 }
 
+.pain-indicator {
+  display: grid;
+  justify-items: center;
+  min-height: 104px;
+}
+
+.pain-emoji {
+  font-size: 76px;
+  line-height: 1;
+  filter: drop-shadow(0 4px 5px rgba(38, 50, 56, 0.16));
+}
+
+.pain-level-text {
+  margin-top: 8px;
+  color: var(--pain-color);
+  font-size: 28px;
+  font-weight: 800;
+}
+
 .vas-value {
-  color: #2f80ed;
+  margin-top: 10px;
+  color: var(--pain-color);
   font-size: 52px;
   font-weight: 800;
   line-height: 1;
@@ -153,17 +174,49 @@ h3 {
 .pain-form input[type="range"] {
   width: 100%;
   margin: 24px 0 10px;
-  accent-color: #2f80ed;
+  accent-color: var(--pain-color);
 }
 
 .vas-labels {
   display: flex;
   justify-content: space-between;
-  gap: 10px;
-  color: #607d8b;
-  font-size: 13px;
-  line-height: 1.35;
+  gap: 6px;
   text-align: center;
+}
+
+.pain-label {
+  display: grid;
+  box-sizing: border-box;
+  flex: 0 1 88px;
+  width: 88px;
+  min-width: 0;
+  padding:12px 4px;
+  border: 2px solid currentColor;
+  border-radius: 12px;
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.pain-label b {
+  margin-bottom: 3px;
+  font-size: 46px;
+  line-height: 1;
+}
+
+.pain-label-none {
+  color: #168a59;
+  background: #e7f7ef;
+}
+
+.pain-label-medium {
+  color: #b76500;
+  background: #fff3d8;
+}
+
+.pain-label-worst {
+  color: #c83d3d;
+  background: #ffebeb;
 }
 
 .pain-form label {
@@ -359,7 +412,7 @@ button.reset {
   margin-bottom: 16px;
   background:
     linear-gradient(rgba(255,255,255,0.08), rgba(255,255,255,0.08)),
-    url("./img/lake-map-bg.png") center / cover no-repeat;
+    url("./img/lake-map-bg-mobile.webp") center / cover no-repeat;
   box-shadow: 0 6px 18px rgba(0,0,0,0.10);
 }
 

@@ -10,8 +10,7 @@
 <body>
   <div id="usernameDisplay" class="username-display hidden"></div>
   <header>
-    <div class="brand-mark">膝</div>
-    <div class="brand-title">TKA 術後數位復健系統</div>
+    <div class="brand-title">膝關節術後數位復健系統</div>
   </header>
 
   <div class="container">
@@ -40,10 +39,14 @@
     <!-- 疼痛評估頁 -->
     <section id="painAssessmentPage" class="hidden">
       <div class="card pain-card">
-        <h2>疼痛評估</h2>
-        <div class="subtitle">請使用 VAS 視覺類比量表記錄今天的疼痛程度</div>
-
+        <h2>今日疼痛程度</h2>
+        
         <form id="painAssessmentForm" class="pain-form" onsubmit="handlePainAssessment(event)">
+          <div class="pain-indicator">
+            <span id="painEmoji" class="pain-emoji" aria-hidden="true">😊</span>
+            <span id="painLevelText" class="pain-level-text">不痛</span>
+          </div>
+
           <div class="vas-value">
             <span id="painScoreDisplay">0</span>
             <small>/ 10</small>
@@ -57,13 +60,14 @@
             max="10"
             step="1"
             value="0"
+            aria-label="今日疼痛程度，0 分不痛，10 分最痛"
             oninput="updatePainScoreDisplay()"
           />
 
           <div class="vas-labels" aria-hidden="true">
-            <span>0<br />不痛</span>
-            <span>5<br />中度疼痛</span>
-            <span>10<br />最痛</span>
+            <span class="pain-label pain-label-none"><b>😊</b>不痛</span>
+            <span class="pain-label pain-label-medium"><b>😣</b>中度疼痛</span>
+            <span class="pain-label pain-label-worst"><b>😭</b>最痛</span>
           </div>
 
           <label for="painNote">備註</label>
@@ -84,7 +88,7 @@
         </div>
 
         <div class="today-progress-card">
-          <strong>今日運動回報</strong>
+          <strong>今日運動紀錄</strong>
           <div><span id="completedRoundCount">0</span> / 4 回合</div>
           <div class="progress-bar">
             <div id="dailyProgress" class="progress">0%</div>

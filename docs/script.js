@@ -149,9 +149,25 @@ function hasCompletedTodaysPainAssessment() {
 function updatePainScoreDisplay() {
   const painScore = document.getElementById("painScore");
   const painScoreDisplay = document.getElementById("painScoreDisplay");
+  const painEmoji = document.getElementById("painEmoji");
+  const painLevelText = document.getElementById("painLevelText");
+  const painForm = document.getElementById("painAssessmentForm");
   if (!painScore || !painScoreDisplay) return;
 
-  painScoreDisplay.innerText = painScore.value;
+  const score = Number(painScore.value);
+  const painLevels = [
+    { max: 0, emoji: "😊", label: "不痛", color: "#1c9b67" },
+    { max: 3, emoji: "🙂", label: "輕微疼痛", color: "#79a824" },
+    { max: 6, emoji: "😣", label: "中度疼痛", color: "#dd8610" },
+    { max: 9, emoji: "😖", label: "重度疼痛", color: "#df573f" },
+    { max: 10, emoji: "😭", label: "最痛", color: "#c83245" }
+  ];
+  const currentLevel = painLevels.find(level => score <= level.max);
+
+  painScoreDisplay.innerText = score;
+  if (painEmoji) painEmoji.innerText = currentLevel.emoji;
+  if (painLevelText) painLevelText.innerText = currentLevel.label;
+  if (painForm) painForm.style.setProperty("--pain-color", currentLevel.color);
 }
 
 async function handlePainAssessment(event) {
