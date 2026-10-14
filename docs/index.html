@@ -4,13 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TKA 術後數位復健系統</title>
-  <link rel="stylesheet" href="style.css?v=20261013-4" />
+  <link rel="stylesheet" href="style.css?v=20261014-12" />
 </head>
 
 <body>
   <div id="usernameDisplay" class="username-display hidden"></div>
   <header>
-    <div class="brand-title">膝關節術後數位復健系統</div>
     <button
       id="menuToggleButton"
       class="menu-toggle hidden"
@@ -21,10 +20,11 @@
     >
       <span class="hamburger-lines" aria-hidden="true"><i></i><i></i><i></i></span>
     </button>
+    <div class="brand-title">膝關節術後數位復健系統</div>
 
     <nav id="appMenu" class="app-menu hidden" aria-label="功能選單">
       <button id="openPainAssessmentButton" type="button" class="secondary">疼痛評估</button>
-      <button type="button" class="secondary" data-menu-page="motionPage">手機角度量測</button>
+      <button type="button" class="secondary" data-menu-page="animalCollectionPage">查看動物圖鑑</button>
       <button type="button" class="secondary" data-menu-page="achievementPage">查看紀錄</button>
       <button type="button" class="secondary" data-menu-page="educationPage">衛教資訊</button>
     </nav>
@@ -47,6 +47,24 @@
 
           <label for="bedNumber">床號</label>
           <input id="bedNumber" name="bedNumber" type="text" autocomplete="off" required />
+
+          <fieldset class="surgery-side-fieldset">
+            <legend>開刀部位</legend>
+            <div class="surgery-side-options">
+              <label class="surgery-side-option">
+                <input type="radio" name="surgerySide" value="left" required />
+                <span>左腳</span>
+              </label>
+              <label class="surgery-side-option">
+                <input type="radio" name="surgerySide" value="right" />
+                <span>右腳</span>
+              </label>
+              <label class="surgery-side-option">
+                <input type="radio" name="surgerySide" value="bilateral" />
+                <span>雙腳</span>
+              </label>
+            </div>
+          </fieldset>
 
           <button type="submit">登入</button>
         </form>
@@ -101,7 +119,7 @@
       <div class="home-hero">
         <div>
           <h1>忘憂湖動物探索</h1>
-          <p>完成一回合，遇見一位動物朋友</p>
+          <p>完成一回合解鎖一隻，完成四回合再加碼一隻</p>
         </div>
 
         <div class="today-progress-card">
@@ -117,28 +135,62 @@
         <div id="animalMap" class="animal-map"></div>
       </div>
 
-      <div class="home-panel">
-        <h2>動物朋友</h2>
-        <p id="animalFriendSummary">已遇見 0 位朋友</p>
-        <div id="animalFriends" class="animal-friends"></div>
-        <div id="nextAnimalMessage" class="next-animal-message">下一回合，朋友等著你！</div>
-      </div>
-
-      <button onclick="showPage('exercisePage')" class="primary-action">開始本次復健</button>
+      <button id="startExerciseButton" onclick="showPage('exercisePage')" class="primary-action">開始本次復健</button>
+      <button onclick="showPage('motionPage')" class="secondary home-secondary-action">膝蓋角度量測</button>
 
       <button onclick="resetAll()" class="reset compact-reset">系統歸零(開發用)</button>
+    </section>
+
+    <!-- 動物圖鑑頁 -->
+    <section id="animalCollectionPage" class="hidden">
+      <div class="card collection-card">
+        <h2>動物蒐集圖鑑</h2>
+        <p id="animalFriendSummary">已蒐集 0 / 10 隻動物</p>
+        <div id="animalFriends" class="animal-friends"></div>
+        <div id="nextAnimalMessage" class="next-animal-message">完成四回合，再加碼解鎖一隻動物！</div>
+        <button onclick="showPage('homePage')" class="secondary">返回首頁</button>
+      </div>
     </section>
 
     <!-- 手機感測器量測頁 -->
     <section id="motionPage" class="hidden">
       <div class="card motion-card">
-        <h2>手機角度量測</h2>
-        <div class="subtitle">請將手機固定在小腿側邊，腳彎到最大後按下記錄。</div>
+        <h2>膝蓋角度量測</h2>
+        <div id="motionStepBadge" class="motion-step-badge">步驟 1 / 2</div>
+
+        <div id="motionGuide" class="motion-guide" data-stage="extension">
+          <div class="motion-leg-figure" aria-hidden="true">
+            <span class="guide-bed"></span><span class="guide-body"></span><span class="guide-hip"></span>
+            <span class="guide-thigh"></span><span class="guide-knee"></span><span class="guide-shin"></span>
+            <span class="guide-foot"></span><span class="guide-phone"></span><span class="guide-direction-arrow"></span>
+            <span class="guide-body-label">身體</span><span class="guide-thigh-label">大腿</span>
+            <span class="guide-knee-label">膝蓋</span><span class="guide-shin-label">小腿</span>
+          </div>
+          <div class="phone-placement-note">
+            <span aria-hidden="true">📱</span>
+            <div><strong>手機側邊貼近小腿</strong><small>手機長邊與小腿平行，充電孔端朝向膝蓋。</small></div>
+          </div>
+          <div>
+            <strong id="motionInstructionTitle">請將腳盡可能伸直</strong>
+            <p id="motionInstructionText">手機側邊貼近小腿並保持平行，姿勢穩定後記錄。</p>
+          </div>
+        </div>
 
         <div class="motion-readout">
           <div>
             <span id="estimatedAngle">0</span>
             <small>目前角度</small>
+          </div>
+        </div>
+
+        <div class="motion-results" aria-label="本次量測結果">
+          <div>
+            <small>伸直角度</small>
+            <strong id="extensionAngleResult">尚未記錄</strong>
+          </div>
+          <div>
+            <small>彎曲角度</small>
+            <strong id="flexionAngleResult">尚未記錄</strong>
           </div>
         </div>
 
@@ -148,7 +200,7 @@
           <div>狀態：<strong id="sensorStatus">進入頁面後會自動請求權限</strong></div>
         </div>
 
-        <button id="saveMotionButton" onclick="saveMotionMeasurement()">記錄此角度</button>
+        <button id="saveMotionButton" onclick="saveMotionMeasurement()">記錄伸直角度</button>
         <button onclick="showPage('homePage')" class="secondary">返回首頁</button>
 
         <div id="motionSaveStatus" class="form-status" role="status"></div>
@@ -244,7 +296,7 @@
     </section>
 
   </div>
-  <script src="database-interface.js?v=20261013-4"></script>
-  <script src="script.js?v=20261013-4"></script>
+  <script src="database-interface.js?v=20261014-12"></script>
+  <script src="script.js?v=20261014-12"></script>
 </body>
 </html>

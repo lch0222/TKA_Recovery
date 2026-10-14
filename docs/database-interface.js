@@ -58,23 +58,43 @@ const DATABASE_INTERFACES = {
         mysqlType: "DATE",
         required: true
       },
-      action_name: {
-        source: "actionName",
-        mysqlType: "VARCHAR(64)",
+      leg_side: {
+        source: "legSide",
+        mysqlType: "VARCHAR(16)",
+        required: true
+      },
+      extension_angle: {
+        source: "extensionAngle",
+        mysqlType: "DECIMAL(6,2)",
+        required: true
+      },
+      flexion_angle: {
+        source: "flexionAngle",
+        mysqlType: "DECIMAL(6,2)",
+        required: true
+      },
+      range_of_motion: {
+        source: "rangeOfMotion",
+        mysqlType: "DECIMAL(6,2)",
+        required: true
+      },
+      extension_beta: {
+        source: "extensionBeta",
+        mysqlType: "DECIMAL(6,2)",
+        required: true
+      },
+      extension_gamma: {
+        source: "extensionGamma",
+        mysqlType: "DECIMAL(6,2)",
         required: false
       },
-      measured_angle: {
-        source: "measuredAngle",
+      flexion_beta: {
+        source: "flexionBeta",
         mysqlType: "DECIMAL(6,2)",
         required: true
       },
-      beta: {
-        source: "beta",
-        mysqlType: "DECIMAL(6,2)",
-        required: true
-      },
-      gamma: {
-        source: "gamma",
+      flexion_gamma: {
+        source: "flexionGamma",
         mysqlType: "DECIMAL(6,2)",
         required: false
       },

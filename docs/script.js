@@ -2,10 +2,14 @@ let currentCount = Number(localStorage.getItem("currentCount")) || 0;
 let currentAction = Number(localStorage.getItem("currentAction")) || 1;
 let totalCount = Number(localStorage.getItem("totalCount")) || 0;
 let completedRounds = Number(localStorage.getItem("completedRounds")) || 0;
+let unlockedAnimalCount = Math.min(10, Math.max(0, Number(localStorage.getItem("unlockedAnimalCount")) || 0));
+let dailyAnimalStartIndex = Math.max(0, Number(localStorage.getItem("dailyAnimalStartIndex")) || 0);
+let dailyBonusAnimalClaimed = localStorage.getItem("dailyBonusAnimalClaimed") === "true";
 let points = Number(localStorage.getItem("points")) || 0;
 const AUTH_COOKIE_NAME = "tkaRecoveryUsername";
 const PAIN_ASSESSMENT_PREFIX = "painAssessment";
 let currentUsername = getCookie(AUTH_COOKIE_NAME) || localStorage.getItem(AUTH_COOKIE_NAME) || "";
+let surgerySide = localStorage.getItem("surgerySide") || "";
 const show_user_name = true;
 const IMG_PATH = "./img/";
 const ACTIONS_PER_ROUND = 4;
@@ -16,10 +20,23 @@ const ACTION_NAMES = [
   "膝部屈曲伸直運動"
 ];
 const ANIMAL_REWARDS = [
-  { name: "白鵝", icon: "🪿", position: { x: 22, y: 64 } },
-  { name: "綠頭鴨", icon: "🦆", position: { x: 64, y: 65 } },
-  { name: "湖畔鳥", icon: "🐦", position: { x: 31, y: 28 } },
-  { name: "花蝴蝶", icon: "🦋", position: { x: 86, y: 58 } }
+  { name: "白鵝", icon: "🪿" },
+  { name: "綠頭鴨", icon: "🦆" },
+  { name: "湖畔鳥", icon: "🐦" },
+  { name: "花蝴蝶", icon: "🦋" },
+  { name: "青蛙", icon: "🐸" },
+  { name: "烏龜", icon: "🐢" },
+  { name: "小魚", icon: "🐟" },
+  { name: "兔子", icon: "🐇" },
+  { name: "松鼠", icon: "🐿️" },
+  { name: "梅花鹿", icon: "🦌" }
+];
+const DAILY_MAP_POSITIONS = [
+  { x: 27, y: 25 },
+  { x: 73, y: 25 },
+  { x: 16, y: 74 },
+  { x: 50, y: 74 },
+  { x: 84, y: 74 }
 ];
 const ACTION_DURATION_MS = 10000;
 const ACTION_VIDEOS = [
@@ -59,6 +76,7 @@ let pendingPlayerElementId = "";
 let youtubePlayerInitVersion = 0;
 let sensorEnabled = false;
 let latestOrientation = null;
+let motionMeasurementSession = null;
 
 if (currentAction < 1 || currentAction > ACTIONS_PER_ROUND) {
   currentAction = 1;
@@ -117,7 +135,7 @@ function updateAppMenuAvailability() {
   const menuToggleButton = document.getElementById("menuToggleButton");
   if (!menuToggleButton) return;
 
-  const canUseMenu = Boolean(currentUsername && hasCompletedTodaysPainAssessment());
+  const canUseMenu = Boolean(currentUsername && surgerySide && hasCompletedTodaysPainAssessment());
   menuToggleButton.classList.toggle("hidden", !canUseMenu);
   if (!canUseMenu) closeAppMenu();
 }
@@ -128,13 +146,17 @@ function handleLogin(event) {
   const surgeryDate = document.getElementById("surgeryDate").value;
   const wardNumber = document.getElementById("wardNumber").value;
   const bedNumber = document.getElementById("bedNumber").value;
+  const selectedSurgerySide = document.querySelector('input[name="surgerySide"]:checked')?.value || "";
   const username = buildUsername(surgeryDate, wardNumber, bedNumber);
 
-  if (!username) return;
+  if (!username || !selectedSurgerySide) return;
 
   currentUsername = username;
+  surgerySide = selectedSurgerySide;
   setCookie(AUTH_COOKIE_NAME, username, 365);
   localStorage.setItem(AUTH_COOKIE_NAME, username);
+  localStorage.setItem("surgerySide", surgerySide);
+  syncDailyExerciseProgress();
   showNextRequiredPage();
 }
 
@@ -142,6 +164,7 @@ function initAuthPage() {
   updateUsernameDisplay();
 
   if (currentUsername) {
+    syncDailyExerciseProgress();
     showNextRequiredPage();
     return;
   }
@@ -155,6 +178,11 @@ function showNextRequiredPage() {
     return;
   }
 
+  if (!surgerySide) {
+    showPage("loginPage");
+    return;
+  }
+
   showPage(hasCompletedTodaysPainAssessment() ? "homePage" : "painAssessmentPage");
 }
 
@@ -164,6 +192,47 @@ function getTodayKey() {
   const month = String(today.getMonth() + 1).padStart(2, "0");
   const day = String(today.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
+}
+
+function syncDailyExerciseProgress() {
+  const todayKey = getTodayKey();
+  const savedDate = localStorage.getItem("exerciseProgressDate");
+  const hasSavedCollection = localStorage.getItem("unlockedAnimalCount") !== null;
+
+  // Preserve progress from the original four-animal version on first upgrade.
+  if (!hasSavedCollection) {
+    unlockedAnimalCount = Math.min(ANIMAL_REWARDS.length, Math.max(0, completedRounds));
+    localStorage.setItem("unlockedAnimalCount", unlockedAnimalCount);
+  }
+
+  if (!savedDate) {
+    completedRounds = Math.min(4, Math.max(0, completedRounds));
+    dailyAnimalStartIndex = Math.max(0, unlockedAnimalCount - completedRounds);
+    localStorage.setItem("completedRounds", completedRounds);
+    localStorage.setItem("dailyAnimalStartIndex", dailyAnimalStartIndex);
+    localStorage.setItem("exerciseProgressDate", todayKey);
+    claimDailyCompletionBonus();
+    return;
+  }
+
+  if (savedDate === todayKey) {
+    completedRounds = Math.min(4, Math.max(0, completedRounds));
+    claimDailyCompletionBonus();
+    return;
+  }
+
+  completedRounds = 0;
+  currentAction = 1;
+  currentCount = 0;
+  actionCounts = Array(ACTIONS_PER_ROUND).fill(0);
+  dailyAnimalStartIndex = unlockedAnimalCount;
+  dailyBonusAnimalClaimed = false;
+
+  localStorage.setItem("completedRounds", completedRounds);
+  localStorage.setItem("dailyAnimalStartIndex", dailyAnimalStartIndex);
+  localStorage.setItem("dailyBonusAnimalClaimed", "false");
+  localStorage.setItem("exerciseProgressDate", todayKey);
+  saveExerciseState();
 }
 
 function getPainAssessmentStorageKey(dateKey = getTodayKey()) {
@@ -266,12 +335,24 @@ function saveExerciseState() {
 }
 
 function showPage(pageId) {
+  if (currentUsername) {
+    syncDailyExerciseProgress();
+  }
+
   if (!currentUsername && pageId !== "loginPage") {
+    pageId = "loginPage";
+  }
+
+  if (currentUsername && !surgerySide && pageId !== "loginPage") {
     pageId = "loginPage";
   }
 
   if (currentUsername && pageId !== "loginPage" && pageId !== "painAssessmentPage" && !hasCompletedTodaysPainAssessment()) {
     pageId = "painAssessmentPage";
+  }
+
+  if (pageId === "exercisePage" && completedRounds >= 4) {
+    pageId = "homePage";
   }
 
   closeAppMenu();
@@ -302,6 +383,7 @@ function showPage(pageId) {
     updatePainScoreDisplay();
   }
   if (pageId === "motionPage") {
+    startMotionMeasurementSession();
     requestSensorAccess();
     updateMotionDisplay();
   }
@@ -329,6 +411,69 @@ function selectAction(actionNumber) {
   showPage("actionPage");
 }
 
+function getMeasurementLegs() {
+  if (surgerySide === "bilateral") return ["left", "right"];
+  return surgerySide ? [surgerySide] : [];
+}
+
+function getLegLabel(legSide) {
+  return legSide === "left" ? "左腳" : "右腳";
+}
+
+function startMotionMeasurementSession() {
+  const legs = getMeasurementLegs();
+  motionMeasurementSession = {
+    legs,
+    legIndex: 0,
+    stage: "extension",
+    extension: null
+  };
+
+  const statusText = document.getElementById("motionSaveStatus");
+  if (statusText) statusText.innerText = "";
+  updateMotionWorkflowDisplay();
+}
+
+function updateMotionWorkflowDisplay() {
+  if (!motionMeasurementSession) return;
+
+  const { legs, legIndex, stage, extension } = motionMeasurementSession;
+  const currentLeg = legs[legIndex];
+  const legLabel = getLegLabel(currentLeg);
+  const isComplete = stage === "complete";
+  const guide = document.getElementById("motionGuide");
+  const saveButton = document.getElementById("saveMotionButton");
+
+  if (guide) guide.dataset.stage = stage;
+  setElementText(
+    "motionStepBadge",
+    isComplete ? "量測完成" : `${legLabel} ${legIndex + 1} / ${legs.length}・步驟 ${stage === "extension" ? 1 : 2} / 2`
+  );
+
+  if (isComplete) {
+    setElementText("motionInstructionTitle", `${legs.length === 2 ? "雙腳" : legLabel}量測完成`);
+    setElementText("motionInstructionText", "伸直與彎曲角度已完整儲存。回診時可提供醫療人員參考。");
+    if (saveButton) {
+      saveButton.disabled = true;
+      saveButton.innerText = "本次量測已完成";
+    }
+    return;
+  }
+
+  const isExtension = stage === "extension";
+  setElementText("motionInstructionTitle", `請將${legLabel}盡可能${isExtension ? "伸直" : "向下彎曲"}`);
+  setElementText(
+    "motionInstructionText",
+    `手機側邊貼近${legLabel}小腿並保持平行，姿勢穩定後按下記錄。`
+  );
+  setElementText("extensionAngleResult", extension ? `${extension.angle}°` : "尚未記錄");
+  setElementText("flexionAngleResult", "尚未記錄");
+  if (saveButton) {
+    saveButton.disabled = false;
+    saveButton.innerText = isExtension ? "記錄伸直角度" : "記錄彎曲角度並完成";
+  }
+}
+
 async function requestSensorAccess() {
   if (!window.DeviceOrientationEvent) {
     setSensorStatus("此裝置或瀏覽器不支援姿態感測器");
@@ -349,7 +494,7 @@ async function requestSensorAccess() {
       sensorEnabled = true;
     }
 
-    setSensorStatus("感測器已啟用，請彎曲到最大角度後記錄");
+    setSensorStatus("感測器已啟用，請依照上方步驟完成量測");
     return true;
   } catch (error) {
     console.error(error);
@@ -385,25 +530,72 @@ async function saveMotionMeasurement() {
     return;
   }
 
+  if (!motionMeasurementSession || motionMeasurementSession.stage === "complete") return;
+
   const statusText = document.getElementById("motionSaveStatus");
-  const measuredAt = new Date();
+  const saveButton = document.getElementById("saveMotionButton");
+  const capturedMeasurement = {
+    angle: roundSensorValue(getCurrentEstimatedLegAngle()),
+    beta: roundSensorValue(latestOrientation.beta),
+    gamma: roundSensorValue(latestOrientation.gamma),
+    capturedAt: new Date().toISOString()
+  };
+
+  if (motionMeasurementSession.stage === "extension") {
+    motionMeasurementSession.extension = capturedMeasurement;
+    motionMeasurementSession.stage = "flexion";
+    updateMotionWorkflowDisplay();
+    if (statusText) statusText.innerText = `伸直角度 ${capturedMeasurement.angle}° 已記錄，請接著量彎曲角度。`;
+    setSensorStatus("請將膝蓋盡可能向下彎曲，穩定後再次記錄");
+    return;
+  }
+
+  const extension = motionMeasurementSession.extension;
+  if (!extension) {
+    motionMeasurementSession.stage = "extension";
+    updateMotionWorkflowDisplay();
+    return;
+  }
+
+  const legSide = motionMeasurementSession.legs[motionMeasurementSession.legIndex];
   const record = {
     username: currentUsername,
     date: getTodayKey(),
-    actionName: ACTION_NAMES[currentAction - 1],
-    measuredAngle: roundSensorValue(getCurrentEstimatedLegAngle()),
-    beta: roundSensorValue(latestOrientation.beta),
-    gamma: roundSensorValue(latestOrientation.gamma),
-    measuredAt: measuredAt.toISOString()
+    legSide,
+    extensionAngle: extension.angle,
+    flexionAngle: capturedMeasurement.angle,
+    rangeOfMotion: roundSensorValue(Math.abs(capturedMeasurement.angle - extension.angle)),
+    extensionBeta: extension.beta,
+    extensionGamma: extension.gamma,
+    flexionBeta: capturedMeasurement.beta,
+    flexionGamma: capturedMeasurement.gamma,
+    measuredAt: capturedMeasurement.capturedAt
   };
 
   try {
+    if (saveButton) saveButton.disabled = true;
     if (statusText) statusText.innerText = "儲存中...";
     await submitMotionMeasurement(record);
-    if (statusText) statusText.innerText = `已記錄 ${record.measuredAngle}°`;
-    setSensorStatus("角度已記錄，可再次彎曲後重新記錄");
+    setElementText("flexionAngleResult", `${record.flexionAngle}°`);
+
+    const hasNextLeg = motionMeasurementSession.legIndex < motionMeasurementSession.legs.length - 1;
+    if (hasNextLeg) {
+      const completedLegLabel = getLegLabel(legSide);
+      motionMeasurementSession.legIndex++;
+      motionMeasurementSession.stage = "extension";
+      motionMeasurementSession.extension = null;
+      updateMotionWorkflowDisplay();
+      if (statusText) statusText.innerText = `${completedLegLabel}完整資料已儲存，請開始量測${getLegLabel(motionMeasurementSession.legs[motionMeasurementSession.legIndex])}。`;
+      setSensorStatus("下一腳請先盡可能伸直，穩定後記錄");
+    } else {
+      motionMeasurementSession.stage = "complete";
+      updateMotionWorkflowDisplay();
+      if (statusText) statusText.innerText = `${getLegLabel(legSide)}完整資料已儲存。`;
+      setSensorStatus("本次膝蓋角度量測已完成");
+    }
   } catch (error) {
     console.error(error);
+    if (saveButton) saveButton.disabled = false;
     if (statusText) statusText.innerText = "儲存失敗，請稍後再試";
   }
 }
@@ -765,6 +957,46 @@ function recordVideoDrivenCount(nextCount) {
   }
 }
 
+function unlockNextAnimal() {
+  const unlockedAnimal = ANIMAL_REWARDS[unlockedAnimalCount] || null;
+  if (unlockedAnimal) {
+    unlockedAnimalCount++;
+    localStorage.setItem("unlockedAnimalCount", unlockedAnimalCount);
+  }
+  return unlockedAnimal;
+}
+
+function claimDailyCompletionBonus() {
+  if (completedRounds < 4 || dailyBonusAnimalClaimed) return null;
+
+  dailyBonusAnimalClaimed = true;
+  localStorage.setItem("dailyBonusAnimalClaimed", "true");
+  return unlockNextAnimal();
+}
+
+function completeRoundAndUnlockAnimal() {
+  if (completedRounds >= 4) {
+    return { completed: false, animal: null, bonusAnimal: null };
+  }
+
+  completedRounds++;
+  const unlockedAnimal = unlockNextAnimal();
+  const bonusAnimal = claimDailyCompletionBonus();
+
+  localStorage.setItem("completedRounds", completedRounds);
+  return { completed: true, animal: unlockedAnimal, bonusAnimal };
+}
+
+function getRoundCompletionMessage(roundReward) {
+  if (roundReward.bonusAnimal) {
+    return `🎉 完成今日 4 回合！解鎖 ${roundReward.animal.icon} ${roundReward.animal.name}，再加碼解鎖 ${roundReward.bonusAnimal.icon} ${roundReward.bonusAnimal.name}！`;
+  }
+  if (roundReward.animal) {
+    return `🎉 完成本回合，解鎖 ${roundReward.animal.icon} ${roundReward.animal.name}！`;
+  }
+  return "🎉 恭喜完成本回合！動物圖鑑已全部蒐集完成。";
+}
+
 function completeCurrentActionFromVideo() {
   stopVideoProgressTracking();
   setActionBackButtonDisabled(false);
@@ -773,8 +1005,12 @@ function completeCurrentActionFromVideo() {
   }
 
   if (actionCounts.every(count => count >= 10)) {
-    completedRounds++;
-    localStorage.setItem("completedRounds", completedRounds);
+    const roundReward = completeRoundAndUnlockAnimal();
+    if (!roundReward.completed) {
+      alert("今天已完成 4 回合，請明天再繼續復健。");
+      showPage("homePage");
+      return;
+    }
 
     currentAction = 1;
     currentCount = 0;
@@ -784,9 +1020,9 @@ function completeCurrentActionFromVideo() {
     updateHome();
     updateAchievement();
 
-    alert("🎉 恭喜完成本回合！");
+    alert(getRoundCompletionMessage(roundReward));
     setTimeout(() => {
-      showPage("exercisePage");
+      showPage(completedRounds >= 4 ? "homePage" : "exercisePage");
     }, 300);
     return;
   }
@@ -940,8 +1176,12 @@ function recordCompletedAction() {
   }
 
   if (actionCounts.every(count => count >= 10)) {
-    completedRounds++;
-    localStorage.setItem("completedRounds", completedRounds);
+    const roundReward = completeRoundAndUnlockAnimal();
+    if (!roundReward.completed) {
+      alert("今天已完成 4 回合，請明天再繼續復健。");
+      showPage("homePage");
+      return true;
+    }
 
     currentAction = 1;
     currentCount = 0;
@@ -951,10 +1191,10 @@ function recordCompletedAction() {
     updateHome();
     updateAchievement();
 
-    alert("🎉 恭喜完成本回合！");
+    alert(getRoundCompletionMessage(roundReward));
 
     setTimeout(() => {
-      showPage("exercisePage");
+      showPage(completedRounds >= 4 ? "homePage" : "exercisePage");
     }, 300);
 
     return true;
@@ -991,6 +1231,9 @@ function resetAll() {
   totalCount = 0;
   completedRounds = 0;
   points = 0;
+  unlockedAnimalCount = 0;
+  dailyAnimalStartIndex = 0;
+  dailyBonusAnimalClaimed = false;
 
   // 更新畫面
   updateHome();
@@ -998,24 +1241,6 @@ function resetAll() {
   resetExercise();
 
   alert("系統已歸零！");
-  showPage("homePage");
-}
-
-function finishRound() {
-  if (completedRounds < 4) {
-
-    completedRounds++;
-    points += 10;
-
-    localStorage.setItem("completedRounds", completedRounds);
-    localStorage.setItem("points", points);
-
-    updateHome();
-    updateAchievement();
-
-    alert("本回合已完成，獲得 10 點！");
-  }
-
   showPage("homePage");
 }
 
@@ -1054,6 +1279,13 @@ function updateHome() {
     completedRoundCount.innerText = Math.min(4, completedRounds);
   }
 
+  const startExerciseButton = document.getElementById("startExerciseButton");
+  if (startExerciseButton) {
+    const reachedDailyLimit = completedRounds >= 4;
+    startExerciseButton.disabled = reachedDailyLimit;
+    startExerciseButton.innerText = reachedDailyLimit ? "今日 4 回合已完成" : "開始本次復健";
+  }
+
   updateAnimalMap();
   updateAnimalFriends();
 }
@@ -1062,13 +1294,14 @@ function updateAnimalMap() {
   const animalMap = document.getElementById("animalMap");
   if (!animalMap) return;
 
-  animalMap.innerHTML = ANIMAL_REWARDS.map((animal, index) => {
-    const roundNumber = index + 1;
-    const isUnlocked = completedRounds >= roundNumber;
+  const todayAnimals = ANIMAL_REWARDS.slice(dailyAnimalStartIndex, dailyAnimalStartIndex + 5);
+  const todayUnlockedCount = Math.max(0, unlockedAnimalCount - dailyAnimalStartIndex);
+  animalMap.innerHTML = todayAnimals.map((animal, index) => {
+    const isUnlocked = index < todayUnlockedCount;
+    const position = DAILY_MAP_POSITIONS[index];
     return `
-      <div class="map-animal ${isUnlocked ? "complete" : "locked"}" style="left:${animal.position.x}%; top:${animal.position.y}%;">
-        <span class="animal-icon">${animal.icon}</span>
-        <span class="animal-label">第 ${roundNumber} 回合</span>
+      <div class="map-animal ${isUnlocked ? "complete" : "locked"}" style="left:${position.x}%; top:${position.y}%;">
+        <span class="animal-icon">${isUnlocked ? animal.icon : "❓"}</span>
       </div>
     `;
   }).join("");
@@ -1078,26 +1311,29 @@ function updateAnimalFriends() {
   const animalFriends = document.getElementById("animalFriends");
   if (!animalFriends) return;
 
-  const unlockedCount = Math.min(ANIMAL_REWARDS.length, completedRounds);
+  const unlockedCount = Math.min(ANIMAL_REWARDS.length, unlockedAnimalCount);
   const summary = document.getElementById("animalFriendSummary");
   const nextMessage = document.getElementById("nextAnimalMessage");
 
   if (summary) {
-    summary.innerText = `已遇見 ${unlockedCount} 位朋友`;
+    summary.innerText = `已蒐集 ${unlockedCount} / ${ANIMAL_REWARDS.length} 隻動物`;
   }
   if (nextMessage) {
-    nextMessage.innerText = unlockedCount >= ANIMAL_REWARDS.length
-      ? "今天的朋友都到齊了！"
-      : `下一回合，${ANIMAL_REWARDS[unlockedCount].name}等著你！`;
+    if (unlockedCount >= ANIMAL_REWARDS.length) {
+      nextMessage.innerText = "恭喜完成 10 隻動物圖鑑！";
+    } else if (completedRounds >= 4) {
+      nextMessage.innerText = "今天完成 4 回合，加碼動物也解鎖了！";
+    } else {
+      nextMessage.innerText = `再完成一回合，解鎖第 ${unlockedCount + 1} 隻動物！`;
+    }
   }
 
   animalFriends.innerHTML = ANIMAL_REWARDS.map((animal, index) => {
-    const roundNumber = index + 1;
-    const isUnlocked = completedRounds >= roundNumber;
+    const isUnlocked = unlockedCount > index;
     return `
       <div class="friend-card ${isUnlocked ? "complete" : "locked"}">
-        <span class="friend-icon">${animal.icon}</span>
-        <div class="friend-state">第 ${roundNumber} 回合</div>
+        <span class="friend-icon">${isUnlocked ? animal.icon : "❓"}</span>
+        <div class="friend-state">${index + 1}. ${isUnlocked ? animal.name : "尚未解鎖"}</div>
       </div>
     `;
   }).join("");
@@ -1110,7 +1346,7 @@ function updateAchievement() {
   const badges = document.getElementById("badges");
   badges.innerHTML = "";
   const badgeImage = document.getElementById("badgeImage");
-  const unlockedAnimals = ANIMAL_REWARDS.filter((animal, index) => completedRounds >= index + 1);
+  const unlockedAnimals = ANIMAL_REWARDS.slice(0, unlockedAnimalCount);
 
   if (unlockedAnimals.length === 0) {
     badges.innerHTML = `<span class="badge">尚未遇見動物朋友</span>`;
@@ -1119,14 +1355,14 @@ function updateAchievement() {
   }
 
   badges.innerHTML = unlockedAnimals
-    .map((animal, index) => `<span class="badge">${animal.icon} 第 ${index + 1} 回合：${animal.name}</span>`)
+    .map((animal, index) => `<span class="badge">${animal.icon} 圖鑑 ${index + 1}：${animal.name}</span>`)
     .join("");
   badgeImage.innerHTML = `
     <div class="achievement-animals">
       ${ANIMAL_REWARDS.map((animal, index) => `
-        <div class="${completedRounds >= index + 1 ? "complete" : "locked"}">
-          <span>${animal.icon}</span>
-          <p>${completedRounds >= index + 1 ? animal.name : `第 ${index + 1} 回合`}</p>
+        <div class="${unlockedAnimalCount > index ? "complete" : "locked"}">
+          <span>${unlockedAnimalCount > index ? animal.icon : "❓"}</span>
+          <p>${unlockedAnimalCount > index ? animal.name : `圖鑑 ${index + 1}`}</p>
         </div>
       `).join("")}
     </div>
